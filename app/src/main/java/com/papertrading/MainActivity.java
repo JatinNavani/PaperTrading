@@ -2,6 +2,7 @@ package com.papertrading;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -26,11 +27,13 @@ import android.widget.LinearLayout;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private List<Stock> allStocks;
     private List<Stock> filteredStocks;
+    private List<Stock> watchlistStocks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,19 +42,26 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize the UI
         initUI();
+        dbHelper = new DatabaseHelper(this);
+
+        Button watchlistButton = findViewById(R.id.btn_watchlist);
+        watchlistButton.setOnClickListener(view -> showWatchlist());
 
         // Download and parse CSV data
         //downloadAndParseCSV("https://www.algogreek.com/instruments.csv");
     }
 
     private LinearLayout stockLayout;
+    private EditText searchBar;
+
+
 
     private void initUI() {
         // Get reference to the LinearLayout where stocks will be displayed
-        LinearLayout stockLayout = findViewById(R.id.stock_layout);
+        stockLayout = findViewById(R.id.stock_layout);
 
-        // Initialize the search bar
-        EditText searchBar = findViewById(R.id.search_bar);
+        // Get reference to the search bar
+        searchBar = findViewById(R.id.search_bar);
         searchBar.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
@@ -64,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {}
+
+
         });
 
         // Initialize the lists
@@ -71,8 +83,13 @@ public class MainActivity extends AppCompatActivity {
         allStocks = dbHelper.getAllStocks();
         filteredStocks = new ArrayList<>(allStocks);
 
-        // Display the initial list of stocks
-        updateUI(stockLayout, filteredStocks);
+        // Display the initial message
+        TextView noStocksTextView = new TextView(this);
+        noStocksTextView.setText("No stocks selected");
+        noStocksTextView.setTextSize(16);
+        noStocksTextView.setPadding(16, 8, 16, 8);
+        stockLayout.addView(noStocksTextView);
+
     }
 
     private void filterStocks(String query) {
@@ -85,52 +102,79 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Update the UI with the filtered list of stock
-        LinearLayout stockLayout = findViewById(R.id.stock_layout);
         updateUI(stockLayout, filteredStocks);
     }
 
-
     private void updateUI(LinearLayout layout, List<Stock> stocks) {
         layout.removeAllViews(); // Clear the layout before adding new views
-        for (Stock stock : stocks) {
-            TextView textView = new TextView(this);
-            textView.setText(stock.getTradingSymbol() + ": " + stock.getLastPrice());
 
-            // Check if the stock is already in the watchlist
-            if (!stock.isInWatchlist()) {
-                // Add the "+" button if the stock is not in the watchlist
-                Button addButton = new Button(this);
-                addButton.setText("+");
-                addButton.setOnClickListener(view -> {
-                    // Add the stock to the watchlist
+        // Check if there are stocks to display
+        if (stocks.isEmpty()) {
+            // Display a message indicating no stocks found
+            TextView noStocksTextView = new TextView(this);
+            noStocksTextView.setText("No stocks found");
+            noStocksTextView.setTextSize(16);
+            noStocksTextView.setPadding(16, 8, 16, 8);
+            layout.addView(noStocksTextView);
+        } else {
+            // Add views for each stock
+            for (Stock stock : stocks) {
+                TextView textView = new TextView(this);
+                textView.setText(stock.getTradingSymbol() + ": " + stock.getLastPrice());
+
+                // Add an OnClickListener to each stock TextView
+                textView.setOnClickListener(view -> {
+                    // Add the clicked stock to the watchlist
                     stock.setInWatchlist(true);
 
                     // Update the database to reflect the change
                     dbHelper.updateStockInWatchlist(stock);
 
+                    // Display a toast message to indicate that the stock was added to the watchlist
+                    Toast.makeText(MainActivity.this, "Added to watchlist: " + stock.getTradingSymbol(), Toast.LENGTH_SHORT).show();
+
                     // Update the UI to reflect the change
                     updateUI(layout, stocks); // Update using the provided layout
                 });
 
-                // Add the button to the layout
-                LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                buttonParams.setMargins(10, 0, 0, 0); // Adjust margins as needed
-                addButton.setLayoutParams(buttonParams);
-                layout.addView(addButton);
+                // Add the TextView for the stock to the layout
+                textView.setTextSize(16);
+                textView.setPadding(16, 8, 16, 8);
+                layout.addView(textView);
             }
-
-            // Add the TextView for the stock
-            textView.setTextSize(16);
-            textView.setPadding(16, 8, 16, 8);
-            layout.addView(textView);
         }
-
     }
 
-/*
+    private void showWatchlist() {
+        // Fetch watchlisted stocks from the database
+        watchlistStocks = dbHelper.getWatchlistStocks();
+
+        // Update the UI to display the watchlisted stocks
+        updateWatchlistUI(watchlistStocks);
+    }
+
+    private void updateWatchlistUI(List<Stock> watchlistStocks) {
+        stockLayout.removeAllViews(); // Clear existing views
+
+        if (!watchlistStocks.isEmpty()) {
+            // Add views for each watchlisted stock
+            for (Stock stock : watchlistStocks) {
+                TextView textView = new TextView(this);
+                textView.setText(stock.getTradingSymbol() + ": " + stock.getLastPrice());
+                // Customize text view properties as needed
+                stockLayout.addView(textView);
+            }
+        } else {
+            // If watchlist is empty, display a message
+            TextView noWatchlistTextView = new TextView(this);
+            noWatchlistTextView.setText("No stocks in watchlist");
+            // Customize text view properties as needed
+            stockLayout.addView(noWatchlistTextView);
+        }
+    }
+
+
+
     public void downloadAndParseCSV(String urlString) {
         new Thread(() -> {
             try {
@@ -159,6 +203,6 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }).start();
-    } */
+    }
     // yooooo
 }

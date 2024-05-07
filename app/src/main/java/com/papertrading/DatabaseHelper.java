@@ -26,7 +26,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "segment TEXT,"
             + "strike REAL,"
             + "tick_size REAL,"
-            + "tradingsymbol TEXT" + ")";
+            + "tradingsymbol TEXT,"
+            + "inWatchlist INTEGER DEFAULT 0" + ")";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -89,5 +90,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update("stocks", values, "instrument_token = ?",
                 new String[]{String.valueOf(stock.getInstrumentToken())});
         db.close();
+    }
+    public List<Stock> getWatchlistStocks() {
+        List<Stock> watchlistStocks = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("stocks", null, "inWatchlist = ?", new String[]{"1"}, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Stock stock = new Stock(
+                        cursor.getString(cursor.getColumnIndex("name")),
+                        cursor.getString(cursor.getColumnIndex("tradingsymbol")),
+                        cursor.getDouble(cursor.getColumnIndex("last_price"))
+                );
+
+                watchlistStocks.add(stock);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        return watchlistStocks;
     }
 }
