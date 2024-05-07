@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Update the UI with the filtered list of stocks
+        // Update the UI with the filtered list of stock
         LinearLayout stockLayout = findViewById(R.id.stock_layout);
         updateUI(stockLayout, filteredStocks);
     }
@@ -160,4 +160,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start();
     } */
+    // yooooo
 }
