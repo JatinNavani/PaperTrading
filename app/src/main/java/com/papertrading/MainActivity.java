@@ -1,8 +1,5 @@
 package com.papertrading;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,29 +8,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
-import android.widget.LinearLayout;
-
-
-import android.content.ContentValues;
-import android.database.sqlite.SQLiteDatabase;
-import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
-    private List<Stock> allStocks;
-    private List<Stock> filteredStocks;
-    private List<Stock> watchlistStocks;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +33,16 @@ public class MainActivity extends AppCompatActivity {
         dbHelper = new DatabaseHelper(this);
 
         Button watchlistButton = findViewById(R.id.btn_watchlist);
-        watchlistButton.setOnClickListener(view -> showWatchlist());
+        watchlistButton.setOnClickListener(view -> {
+            showWatchlist();
+        });
 
         // Download and parse CSV data
+        InstrumentsUpdate instrumentsUpdate = new InstrumentsUpdate(dbHelper);
+        instrumentsUpdate.execute();
+        Log.d(Thread.currentThread().getId() +"", Thread.currentThread().getId()  + " thread start " );
+
+
         //downloadAndParseCSV("https://www.algogreek.com/instruments.csv");
     }
 
@@ -69,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 // Filter the stocks based on the search query
-                filterStocks(charSequence.toString());
+                //filterStocks(charSequence.toString());
             }
 
             @Override
@@ -80,8 +75,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize the lists
         dbHelper = new DatabaseHelper(this);
-        allStocks = dbHelper.getAllStocks();
-        filteredStocks = new ArrayList<>(allStocks);
+        //allStocks = dbHelper.getAllStocks();
+        //filteredStocks = new ArrayList<>(allStocks);
 
         // Display the initial message
         TextView noStocksTextView = new TextView(this);
@@ -91,8 +86,9 @@ public class MainActivity extends AppCompatActivity {
         stockLayout.addView(noStocksTextView);
 
     }
-
+    /*
     private void filterStocks(String query) {
+        Log.d("FilterStocks", "Query: " + query); // Log the search query
         // Filter the list of stocks based on the search query
         filteredStocks.clear();
         for (Stock stock : allStocks) {
@@ -101,9 +97,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        // Log the filtered stocks
+        for (Stock stock : filteredStocks) {
+            Log.d("FilterStocks", "Filtered Stock: " + stock.getTradingSymbol());
+        }
+
         // Update the UI with the filtered list of stock
         updateUI(stockLayout, filteredStocks);
     }
+    */
 
     private void updateUI(LinearLayout layout, List<Stock> stocks) {
         layout.removeAllViews(); // Clear the layout before adding new views
@@ -125,10 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 // Add an OnClickListener to each stock TextView
                 textView.setOnClickListener(view -> {
                     // Add the clicked stock to the watchlist
-                    stock.setInWatchlist(true);
-
-                    // Update the database to reflect the change
-                    dbHelper.updateStockInWatchlist(stock);
+                    addStockToWatchlist(stock);
 
                     // Display a toast message to indicate that the stock was added to the watchlist
                     Toast.makeText(MainActivity.this, "Added to watchlist: " + stock.getTradingSymbol(), Toast.LENGTH_SHORT).show();
@@ -147,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showWatchlist() {
         // Fetch watchlisted stocks from the database
-        watchlistStocks = dbHelper.getWatchlistStocks();
+        List<Stock> watchlistStocks = dbHelper.getWatchlistStocks();
 
         // Update the UI to display the watchlisted stocks
         updateWatchlistUI(watchlistStocks);
@@ -172,37 +171,12 @@ public class MainActivity extends AppCompatActivity {
             stockLayout.addView(noWatchlistTextView);
         }
     }
-
-
-
-    public void downloadAndParseCSV(String urlString) {
-        new Thread(() -> {
-            try {
-                URL url = new URL(urlString);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                InputStream inputStream = connection.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] columns = line.split(",");
-                    // Skip headers or add condition to ignore malformed lines
-                    if (columns.length == 12) {
-                        // Call insertStockIntoDatabase using dbHelper instance
-                        dbHelper.insertStockIntoDatabase(columns);
-
-                    }
-                }
-                Log.d("CSV_DOWNLOAD", "Inserted all stocks " );
-
-                reader.close();
-                inputStream.close();
-                connection.disconnect();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+    private void addStockToWatchlist(Stock stock) {
+        // Add the stock to the watchlist table in the database
+        dbHelper.addToWatchlist(stock.getInstrumentToken());
     }
-    // yooooo
+
+
+
+
 }
