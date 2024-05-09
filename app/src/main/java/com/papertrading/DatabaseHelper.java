@@ -38,6 +38,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String CREATE_TABLE_WATCHLIST = "CREATE TABLE IF NOT EXISTS " +
             "watchlist (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "tradingsymbol TEXT, " +
+            "name TEXT, " +
             "instrument_token INTEGER" +
             ")";
 
@@ -71,6 +73,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cv.put("segment", columns[8]);
         cv.put("strike", columns[9]);
         cv.put("tick_size", columns[10]);
+        cv.put("tradingsymbol",columns[11]);
 
         db.insert("stocks", null, cv);
 
@@ -98,10 +101,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return stockList;
     }
 
-    public void addToWatchlist(long instrumentToken) {
+    public void addToWatchlist(String tradingsymbol) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put("instrument_token", instrumentToken);
+        cv.put("tradingsymbol", tradingsymbol);
         db.insert(TABLE_WATCHLIST, null, cv);
         db.close();
     }
@@ -118,6 +121,63 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     }
+    public List<Stock> searchStocks(String query) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<Stock> searchResults = new ArrayList<>();
+
+        String[] columns = {"name", "tradingsymbol", "last_price"};
+        String selection = "tradingsymbol LIKE ?";
+        String[] selectionArgs = {"%" + query + "%"};
+
+        Cursor cursor = db.query(TABLE_STOCKS, columns, selection, selectionArgs, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                String tradingsymbol = cursor.getString(cursor.getColumnIndex("tradingsymbol"));
+                double lastPrice = cursor.getDouble(cursor.getColumnIndex("last_price"));
+                Stock stock = new Stock(name, tradingsymbol, lastPrice);
+                searchResults.add(stock);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        return searchResults;
+    }
+
+
+
+
+    //new
+    /*
+    public List<Stock> getFilteredStocks(String query) {
+        List<Stock> filteredStocks = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Log.d(TAG, "Search Query: " + query);
+        Cursor cursor = db.rawQuery("SELECT * FROM stocks WHERE tradingsymbol LIKE ?", new String[]{"%" + query + "%"});
+
+        if (cursor.moveToFirst()) {
+            do {
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                String tradingSymbol = cursor.getString(cursor.getColumnIndex("tradingsymbol"));
+                double lastPrice = cursor.getDouble(cursor.getColumnIndex("last_price"));
+                Log.d(TAG, "Found Stock - Name: " + name + ", Symbol: " + tradingSymbol + ", Price: " + lastPrice);
+
+                // Create a Stock object and add it to the list of filtered stocks
+                Stock stock = new Stock(name, tradingSymbol, lastPrice);
+                filteredStocks.add(stock);
+            } while (cursor.moveToNext());
+        } else {
+            Log.d(TAG, "No stocks found for query: " + query);
+        }
+
+        cursor.close();
+
+        return filteredStocks;
+    }
+    */
+
+
     /*public List<Stock> getWatchlistStocks() {
         List<Stock> watchlistStocks = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -147,17 +207,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
                 long instrumentToken = cursor.getLong(cursor.getColumnIndex("instrument_token"));
-                // Fetch the corresponding Stock object from the stocks table based on instrumentToken
-                Stock stock = getStockByInstrumentToken(instrumentToken);
-                if (stock != null) {
-                    watchlistStocks.add(stock);
-                }
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                String tradingsymbol = cursor.getString(cursor.getColumnIndex("tradingsymbol"));
+                Stock stock = new Stock(name, tradingsymbol, instrumentToken);
+                watchlistStocks.add(stock);
+
+
+
             } while (cursor.moveToNext());
         }
 
         cursor.close();
         return watchlistStocks;
     }
+
 
     // Helper method to fetch a Stock object based on instrumentToken
     private Stock getStockByInstrumentToken(long instrumentToken) {

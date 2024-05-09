@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -50,6 +51,10 @@ public class MainActivity extends AppCompatActivity {
     private EditText searchBar;
 
 
+    private List<Stock> filteredStocks = new ArrayList<>(); //new
+
+
+
 
     private void initUI() {
         // Get reference to the LinearLayout where stocks will be displayed
@@ -64,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 // Filter the stocks based on the search query
-                //filterStocks(charSequence.toString());
+                filterStocks(charSequence.toString());
             }
 
             @Override
@@ -86,11 +91,29 @@ public class MainActivity extends AppCompatActivity {
         stockLayout.addView(noStocksTextView);
 
     }
-    /*
     private void filterStocks(String query) {
         Log.d("FilterStocks", "Query: " + query); // Log the search query
+        // Fetch filtered stocks from the database
+        filteredStocks = dbHelper.searchStocks(query);
+
+        // Log the filtered stocks
+        for (Stock stock : filteredStocks) {
+            Log.d("FilterStocks", "Filtered Stock: " + stock.getTradingSymbol());
+        }
+
+        // Update the UI with the filtered list of stock
+        updateUI(stockLayout, filteredStocks);
+    }
+
+
+
+
+    /*private void filterStocks(String query) {
+        Log.d("FilterStocks", "Query: " + query); // Log the search query
         // Filter the list of stocks based on the search query
+
         filteredStocks.clear();
+        allStocks = dbHelper.getAllStocks() ;
         for (Stock stock : allStocks) {
             if (stock.getTradingSymbol().toLowerCase().contains(query.toLowerCase())) {
                 filteredStocks.add(stock);
@@ -104,8 +127,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Update the UI with the filtered list of stock
         updateUI(stockLayout, filteredStocks);
-    }
-    */
+    } */
+
+
 
     private void updateUI(LinearLayout layout, List<Stock> stocks) {
         layout.removeAllViews(); // Clear the layout before adding new views
@@ -133,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Added to watchlist: " + stock.getTradingSymbol(), Toast.LENGTH_SHORT).show();
 
                     // Update the UI to reflect the change
-                    updateUI(layout, stocks); // Update using the provided layout
+                    updateUI(layout, filteredStocks); // Update using the provided layout
                 });
 
                 // Add the TextView for the stock to the layout
@@ -173,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private void addStockToWatchlist(Stock stock) {
         // Add the stock to the watchlist table in the database
-        dbHelper.addToWatchlist(stock.getInstrumentToken());
+        dbHelper.addToWatchlist(stock.getTradingSymbol());
     }
 
 
