@@ -1,6 +1,7 @@
 package com.papertrading;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
@@ -208,6 +209,19 @@ public class MainActivity extends AppCompatActivity {
 
                 textView.setTextSize(16);
                 textView.setPadding(16, 24, 16, 24);
+
+                // Set click listener to start BuySellActivity when a watchlisted stock is clicked
+                textView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        // Start BuySellActivity
+                        Intent intent = new Intent(MainActivity.this, BuySellActivity.class);
+                        intent.putExtra("Trading_Symbol", stock.getTradingSymbol());
+                        startActivity(intent);
+                    }
+                });
+
+                // Add the TextView to the layout
                 stockLayout.addView(textView);
 
                 // Create and add the divider View
@@ -216,8 +230,6 @@ public class MainActivity extends AppCompatActivity {
                 divider.setLayoutParams(new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, 5)); // Set height to 5dp
                 stockLayout.addView(divider);
-
-                textView.setOnClickListener(view -> showBuySellDialog(stock));
             }
         } else {
             // If watchlist is empty, display a message
@@ -227,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
             stockLayout.addView(noWatchlistTextView);
         }
     }
+
     private void addStockToWatchlist(Stock stock) {
         // Add the stock to the watchlist table in the database
         dbHelper.addToWatchlist(stock.getTradingSymbol());
