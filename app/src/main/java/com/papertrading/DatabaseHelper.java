@@ -128,8 +128,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] columns = {"name", "tradingsymbol", "last_price"};
         String selection = "tradingsymbol LIKE ?";
         String[] selectionArgs = {"%" + query + "%"};
+        String limit = "25";
 
-        Cursor cursor = db.query(TABLE_STOCKS, columns, selection, selectionArgs, null, null, null);
+        Cursor cursor = db.query(TABLE_STOCKS, columns, selection, selectionArgs, null, null, null,limit);
 
         if (cursor.moveToFirst()) {
             do {
