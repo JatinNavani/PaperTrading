@@ -1,15 +1,19 @@
 package com.papertrading;
 
+import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
@@ -22,6 +26,11 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
+    private LinearLayout stockLayout;
+    private EditText searchBar;
+
+
+    private List<Stock> filteredStocks = new ArrayList<>(); //new
 
 
     @Override
@@ -42,19 +51,7 @@ public class MainActivity extends AppCompatActivity {
         InstrumentsUpdate instrumentsUpdate = new InstrumentsUpdate(dbHelper);
         instrumentsUpdate.execute();
         Log.d(Thread.currentThread().getId() +"", Thread.currentThread().getId()  + " thread start " );
-
-
-        //downloadAndParseCSV("https://www.algogreek.com/instruments.csv");
     }
-
-    private LinearLayout stockLayout;
-    private EditText searchBar;
-
-
-    private List<Stock> filteredStocks = new ArrayList<>(); //new
-
-
-
 
     private void initUI() {
         // Get reference to the LinearLayout where stocks will be displayed
@@ -104,33 +101,54 @@ public class MainActivity extends AppCompatActivity {
         // Update the UI with the filtered list of stock
         updateUI(stockLayout, filteredStocks);
     }
+    private void updateUI(LinearLayout layout, List<Stock> stocks) {
+        layout.removeAllViews(); // Clear the layout before adding new views
+
+        // Check if there are stocks to display
+        if (stocks.isEmpty()) {
+            // Display a message indicating no stocks found
+            TextView noStocksTextView = new TextView(this);
+            noStocksTextView.setText("No stocks found");
+            noStocksTextView.setTextSize(16);
+            noStocksTextView.setPadding(16, 8, 16, 8);
+            layout.addView(noStocksTextView);
+        } else {
+            // Add views for each stock and divider
+            for (Stock stock : stocks) {
+                TextView textView = new TextView(this);
+                textView.setText(stock.getTradingSymbol() + ": " + stock.getLastPrice());
+
+                // Add an OnClickListener to each stock TextView (existing code)
+                textView.setOnClickListener(view -> {
+                    // Add the clicked stock to the watchlist
+                    addStockToWatchlist(stock);
+
+                    // Display a toast message to indicate that the stock was added to the watchlist
+                    Toast.makeText(MainActivity.this, "Added to watchlist: " + stock.getTradingSymbol(), Toast.LENGTH_SHORT).show();
+
+                    // Update the UI to reflect the change
+                    updateUI(layout, filteredStocks); // Update using the provided layout
+                });
+
+                // Add the TextView for the stock to the layout
+                textView.setTextSize(16);
+                textView.setPadding(16, 24, 16, 24);
+                layout.addView(textView);
+
+                // Create and add the divider View
+                View divider = new View(this);
+                divider.setBackgroundColor(Color.GRAY);
+                divider.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 5)); // Set height to 5dp
+                layout.addView(divider);
 
 
-
-
-    /*private void filterStocks(String query) {
-        Log.d("FilterStocks", "Query: " + query); // Log the search query
-        // Filter the list of stocks based on the search query
-
-        filteredStocks.clear();
-        allStocks = dbHelper.getAllStocks() ;
-        for (Stock stock : allStocks) {
-            if (stock.getTradingSymbol().toLowerCase().contains(query.toLowerCase())) {
-                filteredStocks.add(stock);
             }
         }
-
-        // Log the filtered stocks
-        for (Stock stock : filteredStocks) {
-            Log.d("FilterStocks", "Filtered Stock: " + stock.getTradingSymbol());
-        }
-
-        // Update the UI with the filtered list of stock
-        updateUI(stockLayout, filteredStocks);
-    } */
+    }
 
 
-
+    /*
     private void updateUI(LinearLayout layout, List<Stock> stocks) {
         layout.removeAllViews(); // Clear the layout before adding new views
 
@@ -168,6 +186,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+     */
+
     private void showWatchlist() {
         // Fetch watchlisted stocks from the database
         List<Stock> watchlistStocks = dbHelper.getWatchlistStocks();
@@ -185,7 +205,19 @@ public class MainActivity extends AppCompatActivity {
                 TextView textView = new TextView(this);
                 textView.setText(stock.getTradingSymbol() + ": " + stock.getLastPrice());
                 // Customize text view properties as needed
+
+                textView.setTextSize(16);
+                textView.setPadding(16, 24, 16, 24);
                 stockLayout.addView(textView);
+
+                // Create and add the divider View
+                View divider = new View(this);
+                divider.setBackgroundColor(Color.GRAY);
+                divider.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 5)); // Set height to 5dp
+                stockLayout.addView(divider);
+
+                textView.setOnClickListener(view -> showBuySellDialog(stock));
             }
         } else {
             // If watchlist is empty, display a message
@@ -199,8 +231,29 @@ public class MainActivity extends AppCompatActivity {
         // Add the stock to the watchlist table in the database
         dbHelper.addToWatchlist(stock.getTradingSymbol());
     }
+    private void showBuySellDialog(final Stock stock) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Buy or Sell?");
 
 
+        // Add the buttons
+        builder.setPositiveButton("Buy", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // Handle buy action
+                Toast.makeText(MainActivity.this, "Buy:" + stock, Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Sell", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // Handle sell action
+                Toast.makeText(MainActivity.this, "Sell:" + stock, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Create and show the dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
 
 
 }

@@ -18,6 +18,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String TABLE_STOCKS = "stocks";
     private static final String TABLE_WATCHLIST = "watchlist";
+    private static final String TABLE_ORDERS = "orders";
 
     private static final String CREATE_TABLE_STOCKS = "CREATE TABLE IF NOT EXISTS " +
             "stocks (" +
@@ -43,6 +44,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "instrument_token INTEGER" +
             ")";
 
+    private static final String CREATE_TABLE_ORDERS = "CREATE TABLE IF NOT EXISTS " +
+            "orders (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "price REAL, " +
+            "type TEXT, " +
+            "instrument_token INTEGER, " +
+            "name TEXT, " +
+            "exchange_token INTEGER, " +
+            "tradingsymbol TEXT, " +
+            "exchange TEXT, " +
+            "quantity INTEGER" +
+            ")";
+
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -51,6 +66,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_STOCKS);
         db.execSQL(CREATE_TABLE_WATCHLIST);
+        db.execSQL(CREATE_TABLE_ORDERS);
     }
 
     @Override
