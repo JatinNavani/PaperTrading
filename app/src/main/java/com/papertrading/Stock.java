@@ -3,7 +3,15 @@ package com.papertrading;
 public class Stock {
     private String name;
     private String tradingSymbol;
+
+
+
+    private String exchange;
     private double lastPrice;
+
+
+
+    private int exchange_token;
 
     private long instrumentToken;
 
@@ -59,5 +67,20 @@ public class Stock {
 
     public void setInstrumentToken(long instrumentToken) {
         this.instrumentToken = instrumentToken;
+    }
+
+    public String getExchange() {
+        return exchange;
+    }
+
+    public void setExchange(String exchange) {
+        this.exchange = exchange;
+    }
+    public int getExchange_token() {
+        return exchange_token;
+    }
+
+    public void setExchange_token(int exchange_token) {
+        this.exchange_token = exchange_token;
     }
 }

@@ -48,6 +48,15 @@ public class MainActivity extends AppCompatActivity {
             showWatchlist();
         });
 
+        Button ordersButton = findViewById(R.id.btn_orders);
+        ordersButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, OrdersActivity.class);
+                startActivity(intent);
+            }
+        });
+
         // Download and parse CSV data
         InstrumentsUpdate instrumentsUpdate = new InstrumentsUpdate(dbHelper);
         instrumentsUpdate.execute();
@@ -189,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
 
      */
 
-    private void showWatchlist() {
+    protected void showWatchlist() {
         // Fetch watchlisted stocks from the database
         List<Stock> watchlistStocks = dbHelper.getWatchlistStocks();
 

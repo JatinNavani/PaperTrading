@@ -14,7 +14,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseHelper";
 
     private static final String DATABASE_NAME = "StocksDB";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     private static final String TABLE_STOCKS = "stocks";
     private static final String TABLE_WATCHLIST = "watchlist";
@@ -161,6 +161,68 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return searchResults;
     }
+    public List<Order> getAllOrders() {
+        List<Order> orders = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Define a projection that specifies which columns from the database you will actually use after this query.
+        String[] projection = {
+                "id",
+                "price",
+                "type",
+                "instrument_token",
+                "name",
+                "exchange_token",
+                "tradingsymbol",
+                "exchange",
+                "quantity"
+        };
+
+        // Define a selection
+        String selection = null;
+
+        // Define selection arguments
+        String[] selectionArgs = null;
+
+        // Define the sort order
+        String sortOrder = "id DESC";
+
+        // Perform the query
+        Cursor cursor = db.query(
+                "orders",           // The table to query
+                projection,         // The array of columns to return (null to return all)
+                selection,          // The columns for the WHERE clause
+                selectionArgs,      // The values for the WHERE clause
+                null,               // don't group the rows
+                null,               // don't filter by row groups
+                sortOrder           // The sort order
+        );
+
+        // Iterate through the cursor and add orders to the list
+        while (cursor.moveToNext()) {
+            // Extract the values from the cursor
+            long id = cursor.getLong(cursor.getColumnIndexOrThrow("id"));
+            double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
+            String type = cursor.getString(cursor.getColumnIndexOrThrow("type"));
+            long instrumentToken = cursor.getLong(cursor.getColumnIndexOrThrow("instrument_token"));
+            String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+            long exchangeToken = cursor.getLong(cursor.getColumnIndexOrThrow("exchange_token"));
+            String tradingSymbol = cursor.getString(cursor.getColumnIndexOrThrow("tradingsymbol"));
+            String exchange = cursor.getString(cursor.getColumnIndexOrThrow("exchange"));
+            int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+
+            // Create an Order object and add it to the list
+            Order order = new Order(id, price, type, instrumentToken, name, exchangeToken, tradingSymbol, exchange, quantity);
+            orders.add(order);
+        }
+
+        // Close the cursor and database connection
+        cursor.close();
+        db.close();
+
+        // Return the list of orders
+        return orders;
+    }
 
 
 
@@ -257,4 +319,64 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return stock;
     }
+
+    public Stock getStockByTradingSymbol(String tradingSymbol) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Stock stock = null;
+        Cursor cursor = null;
+
+        try {
+            // Define the columns you want to retrieve
+            String[] projection = {
+                    "name",
+                    "last_price",
+                    "instrument_token",
+                    "exchange_token",
+                    "exchange"
+            };
+
+            // Define the selection criteria
+            String selection = "tradingsymbol = ?";
+            String[] selectionArgs = {tradingSymbol};
+
+            // Query the database
+            cursor = db.query(
+                    "stocks",
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null
+            );
+
+            // Check if a stock was found
+            if (cursor != null && cursor.moveToFirst()) {
+                // Extract the stock details from the cursor
+                String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                double lastPrice = cursor.getDouble(cursor.getColumnIndexOrThrow("last_price"));
+                long instrumentToken = cursor.getLong(cursor.getColumnIndexOrThrow("instrument_token"));
+                int exchangeToken = cursor.getInt(cursor.getColumnIndexOrThrow("exchange_token"));
+                String exchange = cursor.getString(cursor.getColumnIndexOrThrow("exchange"));
+
+                // Create a new Stock object with the retrieved details
+                stock = new Stock(name, tradingSymbol, lastPrice);
+                stock.setInstrumentToken(instrumentToken);
+                stock.setExchange_token(exchangeToken);
+
+                stock.setExchange(exchange);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Close the cursor to release its resources
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        // Return the retrieved stock (or null if not found)
+        return stock;
+    }
+
 }
