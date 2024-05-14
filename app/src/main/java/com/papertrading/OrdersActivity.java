@@ -30,8 +30,13 @@ public class OrdersActivity extends MainActivity {
         displayOrders(ordersLayout);
 
         Button watchlistButton = findViewById(R.id.btn_watchlist);
-        watchlistButton.setOnClickListener(view -> {
-            showWatchlist();
+        watchlistButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(OrdersActivity.this, MainActivity.class);
+                startActivity(intent);
+
+            }
         });
 
         Button ordersButton = findViewById(R.id.btn_orders);
@@ -59,8 +64,14 @@ public class OrdersActivity extends MainActivity {
             // Add views for each stock and divider
             for (Order order : orders) {
                 TextView textView = new TextView(this);
-                textView.setText(order.getTradingSymbol() + ": " + order.getOrderType());
+                StringBuilder orderInfo = new StringBuilder();
+                orderInfo.append("Trading Symbol: ").append(order.getTradingSymbol()).append("\n");
+                orderInfo.append("Price: ").append(order.getPrice()).append("\n");
+                orderInfo.append("Status: ").append("Pending").append("\n"); // Set status to pending for now
+                orderInfo.append("Quantity: ").append(order.getQuantity()).append("\n");
+                orderInfo.append("Type: ").append(order.getType()); // Buy or Sell
 
+                textView.setText(orderInfo.toString());
                 // Add an OnClickListener to each order TextView (existing code)
                 textView.setOnClickListener(view -> {
                     // Display order info

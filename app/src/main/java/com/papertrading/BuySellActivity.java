@@ -58,8 +58,13 @@ public class BuySellActivity extends MainActivity {
         });
 
         Button watchlistButton = findViewById(R.id.btn_watchlist);
-        watchlistButton.setOnClickListener(view -> {
-            showWatchlist();
+        watchlistButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(BuySellActivity.this, MainActivity.class);
+                startActivity(intent);
+
+            }
         });
 
         Button ordersButton = findViewById(R.id.btn_orders);

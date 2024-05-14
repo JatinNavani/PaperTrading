@@ -2,7 +2,9 @@ package com.papertrading;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -23,7 +25,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
@@ -32,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     private List<Stock> filteredStocks = new ArrayList<>(); //new
+    private static final String PREFS_NAME = "AppPrefs";
+    private static final String KEY_LAST_DOWNLOAD_DATE = "lastDownloadDate";
 
 
     @Override
@@ -42,12 +48,12 @@ public class MainActivity extends AppCompatActivity {
         // Initialize the UI
         initUI();
         dbHelper = new DatabaseHelper(this);
+        showWatchlist();
 
         Button watchlistButton = findViewById(R.id.btn_watchlist);
         watchlistButton.setOnClickListener(view -> {
             showWatchlist();
         });
-
         Button ordersButton = findViewById(R.id.btn_orders);
         ordersButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,10 +63,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Download and parse CSV data
-        InstrumentsUpdate instrumentsUpdate = new InstrumentsUpdate(dbHelper);
-        instrumentsUpdate.execute();
-        Log.d(Thread.currentThread().getId() +"", Thread.currentThread().getId()  + " thread start " );
+
+        if (!dbHelper.isDownloadedToday()) {
+            // If not, execute the download task
+            InstrumentsUpdate instrumentsUpdate = new InstrumentsUpdate(dbHelper);
+            instrumentsUpdate.execute();
+            // Set the last download date to today
+            dbHelper.setDownloadedToday();
+            Log.d("CSV downloaded","downloaded");
+        }
+        else{
+            Log.d("Not downloaded","Not downloaded");
+        }
+
+
     }
 
     private void initUI() {
@@ -126,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
             // Add views for each stock and divider
             for (Stock stock : stocks) {
                 TextView textView = new TextView(this);
-                textView.setText(stock.getTradingSymbol() + ": " + stock.getLastPrice());
+                textView.setText(stock.getTradingSymbol());
 
                 // Add an OnClickListener to each stock TextView (existing code)
                 textView.setOnClickListener(view -> {
@@ -158,45 +174,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /*
-    private void updateUI(LinearLayout layout, List<Stock> stocks) {
-        layout.removeAllViews(); // Clear the layout before adding new views
-
-        // Check if there are stocks to display
-        if (stocks.isEmpty()) {
-            // Display a message indicating no stocks found
-            TextView noStocksTextView = new TextView(this);
-            noStocksTextView.setText("No stocks found");
-            noStocksTextView.setTextSize(16);
-            noStocksTextView.setPadding(16, 8, 16, 8);
-            layout.addView(noStocksTextView);
-        } else {
-            // Add views for each stock
-            for (Stock stock : stocks) {
-                TextView textView = new TextView(this);
-                textView.setText(stock.getTradingSymbol() + ": " + stock.getLastPrice());
-
-                // Add an OnClickListener to each stock TextView
-                textView.setOnClickListener(view -> {
-                    // Add the clicked stock to the watchlist
-                    addStockToWatchlist(stock);
-
-                    // Display a toast message to indicate that the stock was added to the watchlist
-                    Toast.makeText(MainActivity.this, "Added to watchlist: " + stock.getTradingSymbol(), Toast.LENGTH_SHORT).show();
-
-                    // Update the UI to reflect the change
-                    updateUI(layout, filteredStocks); // Update using the provided layout
-                });
-
-                // Add the TextView for the stock to the layout
-                textView.setTextSize(16);
-                textView.setPadding(16, 8, 16, 8);
-                layout.addView(textView);
-            }
-        }
-    }
-
-     */
 
     protected void showWatchlist() {
         // Fetch watchlisted stocks from the database
@@ -213,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
             // Add views for each watchlisted stock
             for (Stock stock : watchlistStocks) {
                 TextView textView = new TextView(this);
-                textView.setText(stock.getTradingSymbol() + ": " + stock.getLastPrice());
+                textView.setText(stock.getTradingSymbol());
                 // Customize text view properties as needed
 
                 textView.setTextSize(16);
@@ -253,29 +230,5 @@ public class MainActivity extends AppCompatActivity {
         // Add the stock to the watchlist table in the database
         dbHelper.addToWatchlist(stock.getTradingSymbol());
     }
-    private void showBuySellDialog(final Stock stock) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Buy or Sell?");
-
-
-        // Add the buttons
-        builder.setPositiveButton("Buy", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // Handle buy action
-                Toast.makeText(MainActivity.this, "Buy:" + stock, Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setNegativeButton("Sell", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // Handle sell action
-                Toast.makeText(MainActivity.this, "Sell:" + stock, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // Create and show the dialog
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
 
 }

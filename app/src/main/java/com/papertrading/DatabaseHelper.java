@@ -5,10 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.icu.text.SimpleDateFormat;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseHelper";
@@ -54,8 +57,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "exchange_token INTEGER, " +
             "tradingsymbol TEXT, " +
             "exchange TEXT, " +
+            "status TEXT, " +
             "quantity INTEGER" +
             ")";
+
+    private static final String TABLE_LAST_DOWNLOAD = "last_download";
+    private static final String COLUMN_LAST_DOWNLOAD_DATE = "last_download_date";
+
+    private static final String CREATE_TABLE_LAST_DOWNLOAD = "CREATE TABLE IF NOT EXISTS " +
+            TABLE_LAST_DOWNLOAD + "(" +
+            COLUMN_LAST_DOWNLOAD_DATE + " TEXT" + ")";
 
 
     public DatabaseHelper(Context context) {
@@ -67,6 +78,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_STOCKS);
         db.execSQL(CREATE_TABLE_WATCHLIST);
         db.execSQL(CREATE_TABLE_ORDERS);
+        db.execSQL(CREATE_TABLE_LAST_DOWNLOAD);
     }
 
     @Override
@@ -224,60 +236,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return orders;
     }
 
-
-
-
-    //new
-    /*
-    public List<Stock> getFilteredStocks(String query) {
-        List<Stock> filteredStocks = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Log.d(TAG, "Search Query: " + query);
-        Cursor cursor = db.rawQuery("SELECT * FROM stocks WHERE tradingsymbol LIKE ?", new String[]{"%" + query + "%"});
-
-        if (cursor.moveToFirst()) {
-            do {
-                String name = cursor.getString(cursor.getColumnIndex("name"));
-                String tradingSymbol = cursor.getString(cursor.getColumnIndex("tradingsymbol"));
-                double lastPrice = cursor.getDouble(cursor.getColumnIndex("last_price"));
-                Log.d(TAG, "Found Stock - Name: " + name + ", Symbol: " + tradingSymbol + ", Price: " + lastPrice);
-
-                // Create a Stock object and add it to the list of filtered stocks
-                Stock stock = new Stock(name, tradingSymbol, lastPrice);
-                filteredStocks.add(stock);
-            } while (cursor.moveToNext());
-        } else {
-            Log.d(TAG, "No stocks found for query: " + query);
-        }
-
-        cursor.close();
-
-        return filteredStocks;
-    }
-    */
-
-
-    /*public List<Stock> getWatchlistStocks() {
-        List<Stock> watchlistStocks = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query("stocks", null, "inWatchlist = ?", new String[]{"1"}, null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Stock stock = new Stock(
-                        cursor.getString(cursor.getColumnIndex("name")),
-                        cursor.getString(cursor.getColumnIndex("tradingsymbol")),
-                        cursor.getDouble(cursor.getColumnIndex("last_price"))
-                );
-
-                watchlistStocks.add(stock);
-            } while (cursor.moveToNext());
-        }
-
-        cursor.close();
-        Log.d(TAG, "getWatchlistStocks: Retrieved " + watchlistStocks.size() + " stocks in watchlist.");
-        return watchlistStocks;
-    } */
     public List<Stock> getWatchlistStocks() {
         List<Stock> watchlistStocks = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -377,6 +335,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Return the retrieved stock (or null if not found)
         return stock;
+    }
+
+    public boolean isDownloadedToday() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_LAST_DOWNLOAD, null, null, null, null, null, null);
+        String lastDownloadDate = null;
+
+        if (cursor != null && cursor.moveToFirst()) {
+            lastDownloadDate = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LAST_DOWNLOAD_DATE));
+            cursor.close();
+        }
+
+        db.close();
+
+        // Compare current date with last download date
+        String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        return todayDate.equals(lastDownloadDate);
+    }
+
+    public void setDownloadedToday() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_LAST_DOWNLOAD_DATE, new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        db.insert(TABLE_LAST_DOWNLOAD, null, values);
+        db.close();
     }
 
 }
