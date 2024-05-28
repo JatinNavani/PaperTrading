@@ -18,6 +18,16 @@ public class Stock {
 
     private boolean inWatchlist;
 
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    private double price;
+
     public Stock(String name,String tradingSymbol, double lastPrice) {
         this.name = name;
         this.tradingSymbol = tradingSymbol;

@@ -41,7 +41,7 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements RabbitMQConnection.MessageListener{
     private DatabaseHelper dbHelper;
     private LinearLayout stockLayout;
     private EditText searchBar;
@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        /*
+
         if (!dbHelper.isDownloadedToday()) {
             // If not, execute the download task
             InstrumentsUpdate instrumentsUpdate = new InstrumentsUpdate(dbHelper);
@@ -88,24 +88,44 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Not downloaded","Not downloaded");
         }
 
-         */
 
 
 
-        rbmqconnect = new RabbitMQConnection();
+
+        rbmqconnect = new RabbitMQConnection(dbHelper,stockLayout);
+        rbmqconnect.setMessageListener(this);
 
         // Call startConsuming after rbmqconnect is initialized
         rbmqconnect.startConsuming();
 
     }
+    @Override
+    public void onPriceUpdateReceived(long instrumentToken, double price) {
+        // Update the watchlist UI with the received price update
+        updateWatchlistUI(instrumentToken, price);
+    }
 
+    private void updateWatchlistUI(long instrumentToken, double price) {
+        // Find the corresponding TextView in the watchlist UI based on instrument token
+        // Update the TextView with the new price
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        String tradingSymbol = dbHelper.getTradingSymbolByInstrumentToken(instrumentToken);
 
-
-
-
-
-
-
+        if (tradingSymbol != null) {
+            for (int i = 0; i < stockLayout.getChildCount(); i++) {
+                View view = stockLayout.getChildAt(i);
+                if (view instanceof TextView) {
+                    TextView textView = (TextView) view;
+                    String text = textView.getText().toString();
+                    if (text.contains(tradingSymbol)) {
+                        // Update the price dynamically
+                        textView.setText(tradingSymbol + " - ₹" + price);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
 
 
@@ -203,8 +223,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
     protected void showWatchlist() {
         // Fetch watchlisted stocks from the database
         List<Stock> watchlistStocks = dbHelper.getWatchlistStocks();
@@ -220,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
             // Add views for each watchlisted stock
             for (Stock stock : watchlistStocks) {
                 TextView textView = new TextView(this);
-                textView.setText(stock.getTradingSymbol());
+                textView.setText(stock.getTradingSymbol() + " - ₹" + stock.getPrice());
                 // Customize text view properties as needed
 
                 textView.setTextSize(16);

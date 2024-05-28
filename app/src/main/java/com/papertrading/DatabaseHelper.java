@@ -362,4 +362,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public String getTradingSymbolByInstrumentToken(long instrumentToken) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String tradingSymbol = null;
+        Cursor cursor = null;
+
+        try {
+            // Define the columns you want to retrieve
+            String[] projection = {"tradingsymbol"};
+
+            // Define the selection criteria
+            String selection = "instrument_token = ?";
+            String[] selectionArgs = {String.valueOf(instrumentToken)};
+
+            // Query the database
+            cursor = db.query("stocks", projection, selection, selectionArgs, null, null, null);
+
+            // Check if a stock was found
+            if (cursor != null && cursor.moveToFirst()) {
+                // Extract the trading symbol from the cursor
+                tradingSymbol = cursor.getString(cursor.getColumnIndexOrThrow("tradingsymbol"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Close the cursor to release its resources
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        // Return the retrieved trading symbol (or null if not found)
+        return tradingSymbol;
+    }
+
 }
