@@ -28,11 +28,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -48,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
     private RabbitMQConnection rbmqconnect;
 
 
+
     private List<Stock> filteredStocks = new ArrayList<>(); //new
     private static final String PREFS_NAME = "AppPrefs";
     private static final String KEY_LAST_DOWNLOAD_DATE = "lastDownloadDate";
@@ -60,8 +66,12 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
 
         // Initialize the UI
         initUI();
+
+
         dbHelper = new DatabaseHelper(this);
+        String id = generateOrRetrieveUUID();
         showWatchlist();
+
 
         Button watchlistButton = findViewById(R.id.btn_watchlist);
         watchlistButton.setOnClickListener(view -> {
@@ -87,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
         else{
             Log.d("Not downloaded","Not downloaded");
         }
+
 
 
 
@@ -277,8 +288,65 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
     private void addStockToWatchlist(Stock stock) {
         // Add the stock to the watchlist table in the database
         dbHelper.addToWatchlist(stock.getTradingSymbol());
+        List<Long> instrumentTokens = new ArrayList<>();
+        List<Stock> watchlistStocks = dbHelper.getWatchlistStocks();
+        for (Stock watch : watchlistStocks) {
+            instrumentTokens.add(dbHelper.getInstrumentTokenByTradingSymbol(watch.getTradingSymbol()));
+        }
+
+
+        String id = generateOrRetrieveUUID();
+
+
+        callApiForStock(instrumentTokens, id);
     }
 
+
+    private void callApiForStock(List<Long> instrument_token, String id) {
+
+        AsyncTask.execute(() -> {
+            try {
+
+
+                String instrumentTokenString = instrument_token.stream()
+                        .map(Object::toString)
+                        .collect(Collectors.joining(","));
+                URL url = new URL("http://192.168.1.5:8282/api/watchlist"+"?id="+id+"&instrumentToken="+instrumentTokenString.toString());
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                try {
+                    InputStream in = urlConnection.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                    StringBuilder result = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        result.append(line);
+                    }
+                    Log.d("API Response", result.toString());
+                } finally {
+                    urlConnection.disconnect();
+                }
+            } catch (IOException e) {
+                Log.e("API Error", "Error making API call", e);
+            }
+        });
+    }
+
+
+    private String generateOrRetrieveUUID() {
+        String uuid = null;
+
+            // Check if UUID exists in the database
+            if (dbHelper.hasUniqueId()) {
+                // Retrieve the UUID from the database
+                uuid = dbHelper.retrieveUniqueId();
+            } else {
+                // Generate and store a new UUID in the database
+                uuid = dbHelper.generateAndStoreUniqueId();
+            }
+
+
+        return uuid;
+    }
 
 
 }

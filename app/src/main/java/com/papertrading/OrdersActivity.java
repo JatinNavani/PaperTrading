@@ -67,7 +67,7 @@ public class OrdersActivity extends MainActivity {
                 StringBuilder orderInfo = new StringBuilder();
                 orderInfo.append("Trading Symbol: ").append(order.getTradingSymbol()).append("\n");
                 orderInfo.append("Price: ").append(order.getPrice()).append("\n");
-                orderInfo.append("Status: ").append("Pending").append("\n"); // Set status to pending for now
+                orderInfo.append("Status: ").append(order.getStatus()).append("\n"); // Set status to pending for now
                 orderInfo.append("Quantity: ").append(order.getQuantity()).append("\n");
                 orderInfo.append("Type: ").append(order.getType()); // Buy or Sell
 

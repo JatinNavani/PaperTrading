@@ -11,6 +11,7 @@ public class Order {
     private long exchangeToken;
     private String tradingSymbol;
     private String exchange;
+    private String status;
     private int quantity;
 
 
@@ -22,7 +23,7 @@ public class Order {
         this.type = type;
     }
 
-    public Order(long id, double price, String type, long instrumentToken, String name, long exchangeToken, String tradingSymbol, String exchange, int quantity) {
+    public Order(long id, double price, String type, long instrumentToken, String name, long exchangeToken, String tradingSymbol, String exchange, int quantity,String status) {
         this.id = id;
         this.price = price;
         this.type = type;
@@ -32,6 +33,7 @@ public class Order {
         this.tradingSymbol = tradingSymbol;
         this.exchange = exchange;
         this.quantity = quantity;
+        this.status = status;
     }
 
 
@@ -54,6 +56,9 @@ public class Order {
     public double getPrice() {
         return price;
     }
+    public String getStatus() {
+        return status;
+    }
 
     public void setPrice(double price) {
         this.price = price;
@@ -65,5 +70,8 @@ public class Order {
 
     public void setType(String type) {
         this.type = type;
+    }
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

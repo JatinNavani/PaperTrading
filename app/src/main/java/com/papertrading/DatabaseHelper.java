@@ -1,5 +1,7 @@
 package com.papertrading;
 
+import static android.app.DownloadManager.COLUMN_ID;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -8,10 +10,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.icu.text.SimpleDateFormat;
 import android.util.Log;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseHelper";
@@ -22,6 +28,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_STOCKS = "stocks";
     private static final String TABLE_WATCHLIST = "watchlist";
     private static final String TABLE_ORDERS = "orders";
+    private static final String TABLE_UNIQUE_IDS = "unique_ids";
 
     private static final String CREATE_TABLE_STOCKS = "CREATE TABLE IF NOT EXISTS " +
             "stocks (" +
@@ -49,7 +56,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_ORDERS = "CREATE TABLE IF NOT EXISTS " +
             "orders (" +
-            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "id String PRIMARY KEY," +
             "price REAL, " +
             "type TEXT, " +
             "instrument_token INTEGER, " +
@@ -68,6 +75,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             TABLE_LAST_DOWNLOAD + "(" +
             COLUMN_LAST_DOWNLOAD_DATE + " TEXT" + ")";
 
+    private static final String CREATE_TABLE_UNIQUE_IDS = "CREATE TABLE IF NOT EXISTS " +
+            TABLE_UNIQUE_IDS + " (" +
+            COLUMN_ID+ " TEXT PRIMARY KEY)";
+
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -79,6 +90,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_WATCHLIST);
         db.execSQL(CREATE_TABLE_ORDERS);
         db.execSQL(CREATE_TABLE_LAST_DOWNLOAD);
+        db.execSQL(CREATE_TABLE_UNIQUE_IDS);
     }
 
     @Override
@@ -133,6 +145,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("tradingsymbol", tradingsymbol);
+        long instrumentToken = getInstrumentTokenByTradingSymbol(tradingsymbol);
+        cv.put("instrument_token", instrumentToken);
         db.insert(TABLE_WATCHLIST, null, cv);
         db.close();
     }
@@ -187,7 +201,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "exchange_token",
                 "tradingsymbol",
                 "exchange",
-                "quantity"
+                "quantity",
+                "status"
         };
 
         // Define a selection
@@ -222,9 +237,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String tradingSymbol = cursor.getString(cursor.getColumnIndexOrThrow("tradingsymbol"));
             String exchange = cursor.getString(cursor.getColumnIndexOrThrow("exchange"));
             int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+            String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
 
             // Create an Order object and add it to the list
-            Order order = new Order(id, price, type, instrumentToken, name, exchangeToken, tradingSymbol, exchange, quantity);
+            Order order = new Order(id, price, type, instrumentToken, name, exchangeToken, tradingSymbol, exchange, quantity,status);
             orders.add(order);
         }
 
@@ -395,5 +411,123 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Return the retrieved trading symbol (or null if not found)
         return tradingSymbol;
     }
+    public long getInstrumentTokenByTradingSymbol(String tradingsymbol) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        long instrumentToken = -1; // Default value in case no token is found
+        Cursor cursor = null;
+
+        try {
+            // Define the columns you want to retrieve
+            String[] projection = {"instrument_token"};
+
+            // Define the selection criteria
+            String selection = "tradingsymbol = ?";
+            String[] selectionArgs = {tradingsymbol};
+
+            // Query the database
+            cursor = db.query("stocks", projection, selection, selectionArgs, null, null, null);
+
+            // Check if a token was found
+            if (cursor != null && cursor.moveToFirst()) {
+                // Extract the instrument token from the cursor
+                instrumentToken = cursor.getLong(cursor.getColumnIndexOrThrow("instrument_token"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Close the cursor to release its resources
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        // Return the retrieved instrument token
+        return instrumentToken;
+    }
+
+    public List<Long> getWatchlistedInstrumentTokens() {
+        List<Long> instrumentTokens = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT instrument_token FROM watchlist", null);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                long instrumentToken = cursor.getLong(cursor.getColumnIndex("instrument_token"));
+                instrumentTokens.add(instrumentToken);
+            }
+            cursor.close();
+        }
+        db.close();
+        return instrumentTokens;
+    }
+
+    public String generateAndStoreUniqueId() {
+        String uuid = null;
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            // Check if UUID already exists
+            if (!hasUniqueId()) {
+                // Generate UUID
+                uuid = UUID.randomUUID().toString();
+
+                // Store UUID in the database
+                storeUniqueId(uuid);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error generating and storing unique ID: " + e.getMessage());
+        } finally {
+            db.close();
+        }
+        return uuid;
+    }
+
+    public boolean hasUniqueId() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_UNIQUE_IDS, null, null, null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return true; // If there is at least one row in the unique_ids table
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return false; // If the unique_ids table is empty
+    }
+
+
+    public void storeUniqueId(String uuid) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_ID, uuid);
+        db.insert(TABLE_UNIQUE_IDS, null, values);
+        db.close(); // Close the database connection after the operation
+    }
+
+
+    public String retrieveUniqueId() {
+        String uuid = null;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+        try {
+            cursor = db.query(TABLE_UNIQUE_IDS, new String[]{COLUMN_ID}, null, null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                uuid = cursor.getString(cursor.getColumnIndex(COLUMN_ID));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving unique ID: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+        return uuid;
+    }
+
+
+
 
 }
