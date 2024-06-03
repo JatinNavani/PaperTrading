@@ -98,6 +98,15 @@ public class BuySellActivity extends MainActivity {
                 startActivity(intent);
             }
         });
+
+        Button pnlButton = findViewById(R.id.btn_pnl);
+        pnlButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(BuySellActivity.this, PnLActivity.class);
+                startActivity(intent);
+            }
+        });
     }
     private void storeOrder(String tradingSymbol, String orderType, String quantity,double quotePrice,long instrument_token,String orderId) {
         // Get a writable database instance
@@ -115,7 +124,8 @@ public class BuySellActivity extends MainActivity {
         values.put("exchange_token", 0); // Default exchange token
         values.put("tradingsymbol", tradingSymbol);
         values.put("exchange", ""); // Default exchange
-        values.put("quantity", Integer.parseInt(quantity)); // Convert quantity to integer
+        values.put("quantity", Integer.parseInt(quantity));// Convert quantity to integer
+        values.put("status", "Pending");
 
         // Insert the values into the orders table
         long newRowId = db.insert("orders", null, values);
@@ -137,7 +147,7 @@ public class BuySellActivity extends MainActivity {
         AsyncTask.execute(() -> {
             try {
 
-                URL url = new URL("http://192.168.1.5:8282/getQuote"+"?instrumentToken="+instrument_token);
+                URL url = new URL("http://192.168.1.4:8282/getQuote"+"?instrumentToken="+instrument_token);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 try {
                     InputStream in = urlConnection.getInputStream();

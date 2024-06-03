@@ -31,7 +31,7 @@ public class InstrumentsUpdate extends AsyncTask<Void,Void,Void> {
             try {
                 Log.d(Thread.currentThread().getId() +"", Thread.currentThread().getId()  + " in thread " );
                 //String urlString = "http://localhost:8181/instruments.csv";
-                String urlString = "http://192.168.1.5:8181/instruments_MCX.csv";
+                String urlString = "http://192.168.1.4:8181/instruments_gen.csv";
                 //String urlString = "https://www.algogreek.com/instruments.csv";
                 URL url = new URL(urlString);
                 URLConnection connection = url.openConnection();

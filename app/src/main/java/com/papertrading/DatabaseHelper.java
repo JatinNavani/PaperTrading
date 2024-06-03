@@ -527,6 +527,46 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return uuid;
     }
 
+    public List<Order> getExecutedOrdersForSymbol(String tradingSymbol) {
+        List<Order> executedOrders = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                TABLE_ORDERS,
+                null,
+                "tradingsymbol = ? AND status = 'Executed'",
+                new String[]{tradingSymbol},
+                null,
+                null,
+                null
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                // Extract order details from the cursor
+                long id = cursor.getLong(cursor.getColumnIndex("id"));
+                double price = cursor.getDouble(cursor.getColumnIndex("price"));
+                String type = cursor.getString(cursor.getColumnIndex("type"));
+                long instrumentToken = cursor.getLong(cursor.getColumnIndex("instrument_token"));
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                long exchangeToken = cursor.getLong(cursor.getColumnIndex("exchange_token"));
+                String exchange = cursor.getString(cursor.getColumnIndex("exchange"));
+                int quantity = cursor.getInt(cursor.getColumnIndex("quantity"));
+                String status = cursor.getString(cursor.getColumnIndex("status"));
+
+                // Create an Order object and add it to the list
+                Order order = new Order(id, price, type, instrumentToken, name, exchangeToken, tradingSymbol, exchange, quantity, status);
+                executedOrders.add(order);
+            } while (cursor.moveToNext());
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return executedOrders;
+    }
+
+
 
 
 

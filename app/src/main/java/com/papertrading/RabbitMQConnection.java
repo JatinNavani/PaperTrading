@@ -21,7 +21,7 @@
 
         private static final String USERNAME = "jatin";
         private static final String PASSWORD = "jatin";
-        private static final String HOSTNAME = "192.168.1.5";
+        private static final String HOSTNAME = "192.168.1.4";
         private static final int PORT = 5672; // Default RabbitMQ port
         private static final String QUEUE_NAME = "YoQueue";
 

@@ -47,8 +47,16 @@ public class OrdersActivity extends MainActivity {
                 startActivity(intent);
             }
         });
+        Button pnlButton = findViewById(R.id.btn_pnl);
+        pnlButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(OrdersActivity.this, PnLActivity.class);
+                startActivity(intent);
+            }
+        });
     }
-    private void displayOrders(LinearLayout layout) {
+    public void displayOrders(LinearLayout layout) {
         layout.removeAllViews(); // Clear the layout before adding new views
         List<Order> orders = dbHelper.getAllOrders();
 

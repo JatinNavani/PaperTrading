@@ -48,9 +48,10 @@ import okio.ByteString;
 
 public class MainActivity extends AppCompatActivity implements RabbitMQConnection.MessageListener{
     private DatabaseHelper dbHelper;
-    private LinearLayout stockLayout;
+    protected LinearLayout stockLayout;
     private EditText searchBar;
     private RabbitMQConnection rbmqconnect;
+
 
 
 
@@ -85,6 +86,14 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
                 startActivity(intent);
             }
         });
+        Button pnlButton = findViewById(R.id.btn_pnl);
+        pnlButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, PnLActivity.class);
+                startActivity(intent);
+            }
+        });
 
         if (!dbHelper.isDownloadedToday()) {
             // If not, execute the download task
@@ -114,6 +123,9 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
     public void onPriceUpdateReceived(long instrumentToken, double price) {
         // Update the watchlist UI with the received price update
         updateWatchlistUI(instrumentToken, price);
+
+
+
     }
 
     private void updateWatchlistUI(long instrumentToken, double price) {
@@ -311,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
                 String instrumentTokenString = instrument_token.stream()
                         .map(Object::toString)
                         .collect(Collectors.joining(","));
-                URL url = new URL("http://192.168.1.5:8282/api/watchlist"+"?id="+id+"&instrumentToken="+instrumentTokenString.toString());
+                URL url = new URL("http://192.168.1.4:8282/api/watchlist"+"?id="+id+"&instrumentToken="+instrumentTokenString.toString());
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 try {
                     InputStream in = urlConnection.getInputStream();
