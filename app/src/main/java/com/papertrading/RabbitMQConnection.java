@@ -21,7 +21,7 @@
 
         private static final String USERNAME = "jatin";
         private static final String PASSWORD = "jatin";
-        private static final String HOSTNAME = "192.168.1.4";
+        private static final String HOSTNAME = "192.168.1.6";
         private static final int PORT = 5672; // Default RabbitMQ port
         private static final String QUEUE_NAME = "YoQueue";
 
@@ -53,37 +53,7 @@
                 try {
                     consumeForWatchlistedStocks();
 
-                    /*
-                    ConnectionFactory factory = new ConnectionFactory();
-                    factory.setHost(HOSTNAME);
-                    factory.setPort(PORT);
-                    factory.setUsername(USERNAME);
-                    factory.setPassword(PASSWORD);
-                    Connection connection = factory.newConnection();
-                    Channel channel = connection.createChannel();
 
-                    channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-
-                    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                        System.out.println("Jatin");
-
-                        String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                        Gson gson = new Gson();
-                        PricePayload payload = gson.fromJson(messageBody, PricePayload.class);
-
-                        if (payload != null) {
-                            Log.d("RabbitMQConnection", "Received price update for " + payload.getInstrumentToken() + ": " + payload.getPrice());
-                            updateStockPrice(payload.getInstrumentToken(),payload.getPrice());
-                        }
-                    };
-
-                    channel.basicConsume("dummyQueue", true, deliverCallback, consumerTag -> { });
-                } catch (IOException | TimeoutException e) {
-                    Log.e("RabbitMQConnection", "Error occurred while consuming messages", e);
-                }
-                return null;
-
-                     */
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

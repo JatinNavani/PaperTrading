@@ -22,10 +22,14 @@ public class OrdersActivity extends MainActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_orders);
+        String tradingSymbol = getIntent().getStringExtra("Trading_Symbol");
         LinearLayout ordersLayout = findViewById(R.id.stock_layout);
 
 
         dbHelper = new DatabaseHelper(this);
+        TextView headingTextView = findViewById(R.id.orders_heading);
+        headingTextView.setText("Orders: " + tradingSymbol);
+
 
         displayOrders(ordersLayout);
 
@@ -104,17 +108,4 @@ public class OrdersActivity extends MainActivity {
         }
     }
 
-    /*private void displayOrders() {
-        // Retrieve orders from the database
-        List<Order> orders = dbHelper.getAllOrders();
-
-        // Display the trading symbols of orders in descending order of order ID
-        StringBuilder orderText = new StringBuilder();
-        for (Order order : orders) {
-            orderText.append(order.getTradingSymbol()).append("\n");
-        }
-        ordersTextView.setText(orderText.toString());
-    }
-
-     */
 }

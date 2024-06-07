@@ -109,9 +109,9 @@ public class PnLActivity extends OrdersActivity implements RabbitMQConnection.Me
                 @Override
                 public void onClick(View v) {
                     // Retrieve the list of executed orders for the selected stock
-                    List<Order> executedOrders = dbHelper.getExecutedOrdersForSymbol(tradingSymbol);
-                    // Display the list of executed orders
-                    displayExecutedOrders(executedOrders);
+                    Intent intent = new Intent(PnLActivity.this, OrdersActivity.class);
+                    intent.putExtra("Trading_Symbol", tradingSymbol);
+                    startActivity(intent);
                 }
             });
             TextView quantityTextView = new TextView(this);
@@ -139,17 +139,7 @@ public class PnLActivity extends OrdersActivity implements RabbitMQConnection.Me
     }
 
     private Map<String, List<Order>> groupOrdersBySymbol(List<Order> orders) {
-        /*
-        Map<String, List<Order>> orderMap = new HashMap<>();
-        for (Order order : orders) {
-            String symbol = order.getTradingSymbol();
-            if (!orderMap.containsKey(symbol)) {
-                orderMap.put(symbol, new ArrayList<>());
-            }
-            orderMap.get(symbol).add(order);
-        }
-        return orderMap;
-        */
+
         Map<String, List<Order>> orderMap = new HashMap<>();
         for (Order order : orders) {
             // Only include orders with status "Executed"
@@ -213,46 +203,9 @@ public class PnLActivity extends OrdersActivity implements RabbitMQConnection.Me
         return realizedProfit + unrealizedProfit;
     }
 
-/*
-    protected void updatePnL(long instrumentToken, double currentPrice) {
-        String tradingSymbol = dbHelper.getTradingSymbolByInstrumentToken(instrumentToken);
-
-        if (tradingSymbol != null && orderMap.containsKey(tradingSymbol)) {
-            List<Order> orders = orderMap.get(tradingSymbol);
-            // Update current price TextView
-            for (int i = 0; i < stockLayout.getChildCount(); i++) {
-                View view = stockLayout.getChildAt(i);
-                if (view instanceof TextView) {
-                    TextView textView = (TextView) view;
-                    String text = textView.getText().toString();
-                    if (text.contains(tradingSymbol)) {
-                        // Update the price dynamically
-                        textView.setText(tradingSymbol + " - Current Price: ₹" + currentPrice);
-                        break;
-                    }
-                }
-            }
-            double profitLoss = calculateProfitLoss(orders, currentPrice); // Use the modified method that considers real-time price
-
-            for (int i = 0; i < stockLayout.getChildCount(); i++) {
-                View view = stockLayout.getChildAt(i);
-                if (view instanceof TextView) {
-                    TextView textView = (TextView) view;
-                    if (textView.getText().toString().startsWith(tradingSymbol)) {
-                        // Assume your TextView's text is formatted as "Symbol - PnL: $xxx"
-                        String newText = String.format(Locale.getDefault(), "%s - PnL: ₹%.2f", tradingSymbol, profitLoss);
-                        textView.setText(newText);
-                        break;
-                    }
-                }
-            }
-        }
 
 
 
-    }
-
- */
 protected void updatePnL(String tradingSymbol, double currentPrice) {
     LinearLayout ordersLayout = findViewById(R.id.stock_layout);
     if (orderMap.containsKey(tradingSymbol)) {
@@ -276,28 +229,7 @@ protected void updatePnL(String tradingSymbol, double currentPrice) {
         }
     }
 }
-    private void displayExecutedOrders(List<Order> executedOrders) {
-        // Create a dialog or start a new activity to display the executed orders
-        // Example: display in a dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Executed Orders");
-        // Create a StringBuilder to build the message
-        StringBuilder message = new StringBuilder();
-        for (Order order : executedOrders) {
-            // Append order details to the message
-            message.append(order.toString()).append("\n");
-        }
-        builder.setMessage(message.toString());
-        // Add a button to dismiss the dialog
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-        // Show the dialog
-        builder.show();
-    }
+
 }
 
 

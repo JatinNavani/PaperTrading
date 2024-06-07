@@ -306,11 +306,12 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
             instrumentTokens.add(dbHelper.getInstrumentTokenByTradingSymbol(watch.getTradingSymbol()));
         }
 
+        List<Long> all_instrumentTokens = dbHelper.getCombinedInstrumentTokens();
+
 
         String id = generateOrRetrieveUUID();
 
-
-        callApiForStock(instrumentTokens, id);
+        callApiForStock(all_instrumentTokens, id);
     }
 
 
@@ -323,7 +324,7 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
                 String instrumentTokenString = instrument_token.stream()
                         .map(Object::toString)
                         .collect(Collectors.joining(","));
-                URL url = new URL("http://192.168.1.4:8282/api/watchlist"+"?id="+id+"&instrumentToken="+instrumentTokenString.toString());
+                URL url = new URL("http://192.168.1.6:8282/api/watchlist"+"?id="+id+"&instrumentToken="+instrumentTokenString.toString());
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 try {
                     InputStream in = urlConnection.getInputStream();

@@ -15,6 +15,7 @@ public class Order {
     private int quantity;
 
 
+
     public String getOrderType() {
         return type;
     }
@@ -74,4 +75,6 @@ public class Order {
     public void setStatus(String status) {
         this.status = status;
     }
+
+
 }

@@ -47,6 +47,7 @@ public class BuySellActivity extends MainActivity {
 
         Button buyButton = findViewById(R.id.buy_button);
         Button sellButton = findViewById(R.id.sell_button);
+        Button removeFromWatchlistButton = findViewById(R.id.btn_remove_watchlist);
         TextView stockNameTextView = findViewById(R.id.trading_symbol_text_view);
         EditText quantityEditText = findViewById(R.id.quantity_edit_text);
         stockNameTextView.setText(tradingSymbol);
@@ -80,7 +81,25 @@ public class BuySellActivity extends MainActivity {
             }
         });
 
-        Button watchlistButton = findViewById(R.id.btn_watchlist);
+
+        removeFromWatchlistButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Get the trading symbol from the intent or UI
+                String tradingSymbol = getIntent().getStringExtra("Trading_Symbol");
+
+                // Call DatabaseHelper method to remove from watchlist
+                dbHelper.removeFromWatchlist(tradingSymbol);
+
+                Toast.makeText(BuySellActivity.this, "Stock Removed from Watchlist: " + tradingSymbol, Toast.LENGTH_SHORT).show();
+
+
+            }
+        });
+
+
+
+                Button watchlistButton = findViewById(R.id.btn_watchlist);
         watchlistButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -147,7 +166,7 @@ public class BuySellActivity extends MainActivity {
         AsyncTask.execute(() -> {
             try {
 
-                URL url = new URL("http://192.168.1.4:8282/getQuote"+"?instrumentToken="+instrument_token);
+                URL url = new URL("http://192.168.1.6:8282/getQuote"+"?instrumentToken="+instrument_token);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 try {
                     InputStream in = urlConnection.getInputStream();

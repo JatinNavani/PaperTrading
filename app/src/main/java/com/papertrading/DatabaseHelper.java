@@ -15,8 +15,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
@@ -564,6 +566,56 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
 
         return executedOrders;
+    }
+    private List<Long> getExecutedOrderInstrumentTokens() {
+        List<Long> instrumentTokens = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(
+                TABLE_ORDERS,
+                new String[]{"instrument_token"},  // Select only instrument_token column
+                "status = ?",  // Filter by status = "Executed"
+                new String[]{"Executed"},
+                null,
+                null,
+                null
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                long instrumentToken = cursor.getLong(cursor.getColumnIndex("instrument_token"));
+                instrumentTokens.add(instrumentToken);
+            } while (cursor.moveToNext());
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return instrumentTokens;
+    }
+    public List<Long> getCombinedInstrumentTokens() {
+        List<Long> instrumentTokens = new ArrayList<>();
+
+        // Get instrument tokens from watchlist
+        instrumentTokens.addAll(getWatchlistedInstrumentTokens());
+
+        // Get instrument tokens from executed orders
+        instrumentTokens.addAll(getExecutedOrderInstrumentTokens());
+
+        // Remove duplicate instrument tokens (if any)
+        Set<Long> uniqueInstrumentTokens = new HashSet<>(instrumentTokens);
+        instrumentTokens.clear();
+        instrumentTokens.addAll(uniqueInstrumentTokens);
+
+        return instrumentTokens;
+    }
+
+    public void removeFromWatchlist(String trading_symbol) {
+        SQLiteDatabase db = getWritableDatabase();
+        String whereClause = "tradingsymbol=?";
+        String[] whereArgs = new String[]{String.valueOf(trading_symbol)};
+        db.delete("watchlist", whereClause, whereArgs);
+        db.close();
     }
 
 
