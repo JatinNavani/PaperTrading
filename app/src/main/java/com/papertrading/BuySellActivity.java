@@ -25,7 +25,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -132,6 +135,7 @@ public class BuySellActivity extends MainActivity {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         Stock stock = dbHelper.getStockByTradingSymbol(tradingSymbol);
 
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         // Create a ContentValues object to hold the values to be inserted
         ContentValues values = new ContentValues();
         // Assuming you have default values for other columns like price, instrument_token, name, etc.
@@ -145,6 +149,8 @@ public class BuySellActivity extends MainActivity {
         values.put("exchange", ""); // Default exchange
         values.put("quantity", Integer.parseInt(quantity));// Convert quantity to integer
         values.put("status", "Pending");
+
+        values.put("time_stamp", timeStamp);
 
         // Insert the values into the orders table
         long newRowId = db.insert("orders", null, values);

@@ -11,10 +11,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Collections;
 import java.util.List;
 
-public class OrdersActivity extends MainActivity {
+public class OrdersPnLActivity extends MainActivity {
 
 
     private DatabaseHelper dbHelper;
@@ -29,16 +28,16 @@ public class OrdersActivity extends MainActivity {
 
         dbHelper = new DatabaseHelper(this);
         TextView headingTextView = findViewById(R.id.orders_heading);
-        headingTextView.setText("Orders: ");
+        headingTextView.setText("Orders: "+ tradingSymbol);
 
 
-        displayOrders(ordersLayout);
+        displayOrders(ordersLayout,tradingSymbol);
 
         Button watchlistButton = findViewById(R.id.btn_watchlist);
         watchlistButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(OrdersActivity.this, MainActivity.class);
+                Intent intent = new Intent(OrdersPnLActivity.this, MainActivity.class);
                 startActivity(intent);
 
             }
@@ -48,7 +47,7 @@ public class OrdersActivity extends MainActivity {
         ordersButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(OrdersActivity.this, OrdersActivity.class);
+                Intent intent = new Intent(OrdersPnLActivity.this, OrdersActivity.class);
                 startActivity(intent);
             }
         });
@@ -56,14 +55,14 @@ public class OrdersActivity extends MainActivity {
         pnlButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(OrdersActivity.this, PnLActivity.class);
+                Intent intent = new Intent(OrdersPnLActivity.this, PnLActivity.class);
                 startActivity(intent);
             }
         });
     }
-    public void displayOrders(LinearLayout layout) {
+    public void displayOrders(LinearLayout layout,String tradingSymbol) {
         layout.removeAllViews(); // Clear the layout before adding new views
-        List<Order> orders = dbHelper.getAllOrders();
+        List<Order> orders = dbHelper.getExecutedOrdersForSymbol(tradingSymbol);
 
         // Check if there are stocks to display
         if (orders.isEmpty()) {
@@ -82,7 +81,7 @@ public class OrdersActivity extends MainActivity {
                 orderInfo.append("Price: ").append(order.getPrice()).append("\n");
                 orderInfo.append("Status: ").append(order.getStatus()).append("\n"); // Set status to pending for now
                 orderInfo.append("Quantity: ").append(order.getQuantity()).append("\n");
-                orderInfo.append("Type: ").append(order.getType()).append("\n");  // Buy or Sell
+                orderInfo.append("Type: ").append(order.getType()).append("\n"); // Buy or Sell
                 orderInfo.append("Time: ").append(order.getTime_stamp());
 
                 textView.setText(orderInfo.toString());

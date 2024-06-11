@@ -46,11 +46,13 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 
-public class MainActivity extends AppCompatActivity implements RabbitMQConnection.MessageListener{
+public class MainActivity extends AppCompatActivity implements MessageListener{
     private DatabaseHelper dbHelper;
+    private PnLActivity pnlActivity;
     protected LinearLayout stockLayout;
     private EditText searchBar;
     private RabbitMQConnection rbmqconnect;
+    private UpdateTask updateTask;
 
 
 
@@ -106,22 +108,24 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
         else{
             Log.d("Not downloaded","Not downloaded");
         }
-
-
-
-
-
-
         rbmqconnect = new RabbitMQConnection(dbHelper,stockLayout);
-        rbmqconnect.setMessageListener(this);
 
-        // Call startConsuming after rbmqconnect is initialized
-        rbmqconnect.startConsuming();
+        if (savedInstanceState == null) {
+            // Call startConsuming after rbmqconnect is initialized
+            RabbitMQConnection.registerEventListener(this);
+            rbmqconnect.execute();
+        }
+
+
+
+
 
     }
     @Override
     public void onPriceUpdateReceived(long instrumentToken, double price) {
         // Update the watchlist UI with the received price update
+
+
         updateWatchlistUI(instrumentToken, price);
 
 
@@ -261,7 +265,16 @@ public class MainActivity extends AppCompatActivity implements RabbitMQConnectio
             // Add views for each watchlisted stock
             for (Stock stock : watchlistStocks) {
                 TextView textView = new TextView(this);
-                textView.setText(stock.getTradingSymbol() + " - ₹" + stock.getPrice());
+                String trading_symbol = stock.getTradingSymbol();
+                long instrument_token = dbHelper.getInstrumentTokenByTradingSymbol(trading_symbol);
+
+                Double price = RabbitMQConnection.getPricesCache().get(instrument_token);
+
+                if (price == null) {
+                    price = 0.0;
+                }
+
+                textView.setText(trading_symbol + " - ₹" + price);
                 // Customize text view properties as needed
 
                 textView.setTextSize(16);

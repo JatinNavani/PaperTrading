@@ -13,6 +13,9 @@ public class Order {
     private String exchange;
     private String status;
     private int quantity;
+    private String time_stamp;
+
+
 
 
 
@@ -24,7 +27,7 @@ public class Order {
         this.type = type;
     }
 
-    public Order(long id, double price, String type, long instrumentToken, String name, long exchangeToken, String tradingSymbol, String exchange, int quantity,String status) {
+    public Order(long id, double price, String type, long instrumentToken, String name, long exchangeToken, String tradingSymbol, String exchange, int quantity,String status,String time_stamp) {
         this.id = id;
         this.price = price;
         this.type = type;
@@ -35,7 +38,16 @@ public class Order {
         this.exchange = exchange;
         this.quantity = quantity;
         this.status = status;
+        this.time_stamp = time_stamp;
     }
+    public String getTime_stamp() {
+        return time_stamp;
+    }
+
+    public void setTime_stamp(String time_stamp) {
+        this.time_stamp = time_stamp;
+    }
+
 
 
     public int getQuantity() {

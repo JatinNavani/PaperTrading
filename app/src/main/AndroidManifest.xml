@@ -36,7 +36,7 @@
         <activity android:name=".BuySellActivity" />
         <activity android:name=".OrdersActivity" />
         <activity android:name=".PnLActivity" />
-
+        <activity android:name=".OrdersPnLActivity" />
     </application>
 
 </manifest>

@@ -25,7 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseHelper";
 
     private static final String DATABASE_NAME = "StocksDB";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     private static final String TABLE_STOCKS = "stocks";
     private static final String TABLE_WATCHLIST = "watchlist";
@@ -67,7 +67,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "tradingsymbol TEXT, " +
             "exchange TEXT, " +
             "status TEXT, " +
-            "quantity INTEGER" +
+            "quantity INTEGER," +
+            "time_stamp TEXT" +
             ")";
 
     private static final String TABLE_LAST_DOWNLOAD = "last_download";
@@ -204,7 +205,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "tradingsymbol",
                 "exchange",
                 "quantity",
-                "status"
+                "status",
+                "time_stamp"
         };
 
         // Define a selection
@@ -214,7 +216,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String[] selectionArgs = null;
 
         // Define the sort order
-        String sortOrder = "id DESC";
+        String sortOrder = "time_stamp DESC";
 
         // Perform the query
         Cursor cursor = db.query(
@@ -240,9 +242,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String exchange = cursor.getString(cursor.getColumnIndexOrThrow("exchange"));
             int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
             String status = cursor.getString(cursor.getColumnIndexOrThrow("status"));
-
+            String time_stamp = cursor.getString(cursor.getColumnIndexOrThrow("time_stamp"));
             // Create an Order object and add it to the list
-            Order order = new Order(id, price, type, instrumentToken, name, exchangeToken, tradingSymbol, exchange, quantity,status);
+            Order order = new Order(id, price, type, instrumentToken, name, exchangeToken, tradingSymbol, exchange, quantity,status,time_stamp);
             orders.add(order);
         }
 
@@ -532,6 +534,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Order> getExecutedOrdersForSymbol(String tradingSymbol) {
         List<Order> executedOrders = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
+        String sortOrder = "time_stamp DESC";
         Cursor cursor = db.query(
                 TABLE_ORDERS,
                 null,
@@ -539,7 +542,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 new String[]{tradingSymbol},
                 null,
                 null,
-                null
+                sortOrder
         );
 
         if (cursor != null && cursor.moveToFirst()) {
@@ -554,9 +557,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String exchange = cursor.getString(cursor.getColumnIndex("exchange"));
                 int quantity = cursor.getInt(cursor.getColumnIndex("quantity"));
                 String status = cursor.getString(cursor.getColumnIndex("status"));
+                String time_stamp = cursor.getString(cursor.getColumnIndex("time_stamp"));
 
                 // Create an Order object and add it to the list
-                Order order = new Order(id, price, type, instrumentToken, name, exchangeToken, tradingSymbol, exchange, quantity, status);
+                Order order = new Order(id, price, type, instrumentToken, name, exchangeToken, tradingSymbol, exchange, quantity, status, time_stamp);
                 executedOrders.add(order);
             } while (cursor.moveToNext());
         }
@@ -617,6 +621,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.delete("watchlist", whereClause, whereArgs);
         db.close();
     }
+
 
 
 

@@ -11,13 +11,18 @@
     import com.rabbitmq.client.Connection;
     import com.rabbitmq.client.ConnectionFactory;
     import com.rabbitmq.client.DeliverCallback;
+    import com.rabbitmq.client.Delivery;
+    import com.rabbitmq.client.ShutdownListener;
+    import com.rabbitmq.client.ShutdownSignalException;
 
     import java.io.IOException;
     import java.nio.charset.StandardCharsets;
+    import java.util.ArrayList;
     import java.util.List;
+    import java.util.concurrent.ConcurrentHashMap;
     import java.util.concurrent.TimeoutException;
 
-    public class RabbitMQConnection {
+    public class RabbitMQConnection extends AsyncTask<Void, Void, Void>{
 
         private static final String USERNAME = "jatin";
         private static final String PASSWORD = "jatin";
@@ -25,57 +30,51 @@
         private static final int PORT = 5672; // Default RabbitMQ port
         private static final String QUEUE_NAME = "YoQueue";
 
+        private static ArrayList<MessageListener> eventListeners = new ArrayList<MessageListener>();
+
+
+
+        private static ConcurrentHashMap<Long,Double> pricesCache = new ConcurrentHashMap();
+
         private LinearLayout stockLayout;
-        private DatabaseHelper dbHelper;
-        private MessageListener messageListener;
+        private static DatabaseHelper dbHelper;
         private Stock stock;
 
-        public interface MessageListener {
-            void onPriceUpdateReceived(long instrumentToken, double price);
-        }
 
-        public void setMessageListener(MessageListener listener) {
-            this.messageListener = listener;
-        }
 
         public RabbitMQConnection(DatabaseHelper dbHelper, LinearLayout stockLayout) {
             this.dbHelper = dbHelper;
             this.stockLayout = stockLayout;
+
         }
 
-        public void startConsuming() {
-            new RabbitMQAsyncTask().execute();
+        @Override
+        protected Void  doInBackground(Void... voids) {
+            connectMQ();
+            return null;
         }
 
-        private class RabbitMQAsyncTask extends AsyncTask<Void, Void, Void> {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                try {
-                    consumeForWatchlistedStocks();
 
 
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                return null;
-            }
 
-            private void updateStockPrice(long instrumentToken, double price) {
-                // Notify the MainActivity about the price upate
-                if (messageListener != null) {
-                    messageListener.onPriceUpdateReceived(instrumentToken, price);
-                }
-            }
 
-            private void subscribeToToken(long instrumentToken) {
+            public void connectMQ() {
                 // Your subscription logic goes here
                 try {
+                    System.out.println("Connect MQ CALLED");
                     ConnectionFactory factory = new ConnectionFactory();
                     factory.setHost(HOSTNAME);
                     factory.setPort(PORT);
                     factory.setUsername(USERNAME);
                     factory.setPassword(PASSWORD);
                     Connection connection = factory.newConnection();
+
+                    connection.addShutdownListener(new ShutdownListener() {
+                        public void shutdownCompleted(ShutdownSignalException cause) {
+                            System.out.println("Connection closed by a reason" + cause.toString());
+                        }
+                    });
+
                     Channel channel = connection.createChannel();
 
                     // Declare a queue for the instrument token
@@ -84,31 +83,47 @@
                     // Bind the queue to the exchange with the routing key based on the instrument token
                     String routingKey = "device." + dbHelper.retrieveUniqueId();
                     channel.queueBind(queueName, "YoExchange", routingKey);
-
+                    //UpdateTask updateTask = new UpdateTask();
                     // Start consuming messages from the queue
                     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                        String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                        Gson gson = new Gson();
-                        PricePayload payload = gson.fromJson(messageBody, PricePayload.class);
-                        if (payload != null) {
-                            Log.d("RabbitMQConnection", "Received price update for " + payload.getInstrumentToken() + ": " + payload.getPrice());
-                            updateStockPrice(payload.getInstrumentToken(), payload.getPrice());
-                        }
+                        System.out.println("recv mesg" + delivery);
+                        (new UpdateTask()).execute(delivery);
+
                     };
                     channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {
                     });
 
                 } catch (IOException | TimeoutException e) {
-                    Log.e("RabbitMQConnection", "Error occurred while subscribing to token " + instrumentToken, e);
+                    Log.e("RabbitMQConnection", "Error occurred while subscribing to token " +  e);
                 }
             }
 
-            public void consumeForWatchlistedStocks() {
-                List<Long> watchlistedTokens = dbHelper.getWatchlistedInstrumentTokens();
-                for (long instrumentToken : watchlistedTokens) {
-                    subscribeToToken(instrumentToken);
-                    }
+
+
+
+        public static void updatePricesCache(long instrumentToken, double price) {
+            pricesCache.put(instrumentToken, price);
+        }
+
+        public static ConcurrentHashMap<Long, Double> getPricesCache() {
+            return pricesCache;
+        }
+
+        public static void setPricesCache(ConcurrentHashMap<Long, Double> pricesCache) {
+            RabbitMQConnection.pricesCache = pricesCache;
+        }
+
+        public static void registerEventListener(MessageListener msgListener) {
+                if (!eventListeners.contains(msgListener)) {
+                   eventListeners.add(msgListener);
             }
-        }}
+        }
+
+        public static ArrayList<MessageListener> getRegisterEventListener() {
+            return eventListeners;
+
+        }
+
+    }
 
 
