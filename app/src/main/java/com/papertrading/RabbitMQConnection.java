@@ -24,9 +24,10 @@
 
     public class RabbitMQConnection extends AsyncTask<Void, Void, Void>{
 
-        private static final String USERNAME = "jatin";
-        private static final String PASSWORD = "jatin";
-        private static final String HOSTNAME = "192.168.1.6";
+        private static final String USERNAME = "test";
+        private static final String PASSWORD = "test";
+        //private static final String HOSTNAME = "192.168.1.6";
+        private static final String HOSTNAME = "papertrade.onthewifi.com";
         private static final int PORT = 5672; // Default RabbitMQ port
         private static final String QUEUE_NAME = "YoQueue";
 

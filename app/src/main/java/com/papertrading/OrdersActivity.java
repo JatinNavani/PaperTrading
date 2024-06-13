@@ -29,7 +29,7 @@ public class OrdersActivity extends MainActivity {
 
         dbHelper = new DatabaseHelper(this);
         TextView headingTextView = findViewById(R.id.orders_heading);
-        headingTextView.setText("Orders: ");
+        headingTextView.setText("All Orders ");
 
 
         displayOrders(ordersLayout);
@@ -78,11 +78,11 @@ public class OrdersActivity extends MainActivity {
             for (Order order : orders) {
                 TextView textView = new TextView(this);
                 StringBuilder orderInfo = new StringBuilder();
-                orderInfo.append("Trading Symbol: ").append(order.getTradingSymbol()).append("\n");
-                orderInfo.append("Price: ").append(order.getPrice()).append("\n");
-                orderInfo.append("Status: ").append(order.getStatus()).append("\n"); // Set status to pending for now
-                orderInfo.append("Quantity: ").append(order.getQuantity()).append("\n");
-                orderInfo.append("Type: ").append(order.getType()).append("\n");  // Buy or Sell
+                orderInfo.append("Trading Symbol: ").append(order.getTradingSymbol()).append("\n\n");
+                orderInfo.append("Price: ").append(order.getPrice()).append("\n\n");
+                orderInfo.append("Status: ").append(order.getStatus()).append("\n\n"); // Set status to pending for now
+                orderInfo.append("Quantity: ").append(order.getQuantity()).append("\n\n");
+                orderInfo.append("Type: ").append(order.getType()).append("\n\n");  // Buy or Sell
                 orderInfo.append("Time: ").append(order.getTime_stamp());
 
                 textView.setText(orderInfo.toString());

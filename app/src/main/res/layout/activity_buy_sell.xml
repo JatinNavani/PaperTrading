@@ -30,7 +30,8 @@
         android:text="Buy"
         android:layout_below="@id/quantity_edit_text"
         android:layout_marginTop="16dp"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:backgroundTint="#088BF3" />
 
     <Button
         android:id="@+id/sell_button"
@@ -39,7 +40,8 @@
         android:text="Sell"
         android:layout_below="@id/buy_button"
         android:layout_marginTop="16dp"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:backgroundTint="#F44336"/>
 
 
     <Button
@@ -49,7 +51,8 @@
         android:text="Delete"
         android:layout_below="@id/sell_button"
         android:layout_marginTop="16dp"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:backgroundTint="#9E9E9E"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -64,8 +67,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Watchlist"
+            android:drawableTop="@drawable/watchlist_svg"
             android:paddingLeft="8dp"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"
+            android:backgroundTint="#F3F3F3"/>
 
         <Button
             android:id="@+id/btn_orders"
@@ -73,8 +78,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Orders"
+            android:drawableTop="@drawable/notebook_svgrepo_com"
             android:paddingLeft="8dp"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"
+            android:backgroundTint="#F3F3F3"/>
 
         <Button
             android:id="@+id/btn_pnl"
@@ -82,8 +89,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="PnL"
+            android:drawableTop="@drawable/trend_up_svgrepo_com"
             android:paddingLeft="8dp"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"
+            android:backgroundTint="#F3F3F3"/>
 
     </LinearLayout>
 

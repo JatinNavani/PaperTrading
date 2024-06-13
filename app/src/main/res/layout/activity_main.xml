@@ -4,19 +4,29 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#E3E0E0">
+
     <TextView
         android:id="@+id/tv_user_id"
+        android:text="Watchlist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:layout_marginTop="8dp"
-        android:layout_marginLeft="16dp" />
+        android:textSize="24sp"
+        android:textColor="@android:color/black"
+        android:layout_margin="16dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="false"/>
+
+</RelativeLayout>
 
     <EditText
         android:id="@+id/search_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Search stocks..."
+        android:hint="Search and add "
         android:inputType="text" />
 
     <ScrollView
@@ -48,8 +58,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Watchlist"
+            android:drawableTop="@drawable/watchlist_svg"
             android:paddingLeft="8dp"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"
+            android:backgroundTint="#F3F3F3"/>
 
         <Button
             android:id="@+id/btn_orders"
@@ -57,8 +69,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Orders"
+            android:drawableTop="@drawable/notebook_svgrepo_com"
             android:paddingLeft="8dp"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"
+            android:backgroundTint="#F3F3F3"/>
 
         <Button
             android:id="@+id/btn_pnl"
@@ -66,8 +80,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="PnL"
+            android:drawableTop="@drawable/trend_up_svgrepo_com"
             android:paddingLeft="8dp"
-            android:textColor="@android:color/black" />
+            android:textColor="@android:color/black"
+            android:backgroundTint="#F3F3F3"/>
 
     </LinearLayout>
 

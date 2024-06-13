@@ -25,7 +25,8 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
     private Map<String, TextView> pnlTextViewMap = new HashMap<>();
 
     TextView overallPnLTextView;
-
+    TextView pnlTextView;
+    TextView current_priceTextView;
 
 
     private static ConcurrentHashMap<String,Double> overallPnlCache = new ConcurrentHashMap();
@@ -89,8 +90,19 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
     }
 
     private void displayPositions(LinearLayout layout) {
-         // Clear the layout before adding new views
 
+        overallPnLTextView = new TextView(this);
+        overallPnLTextView.setBackgroundColor(Color.WHITE);
+        overallPnLTextView.setTextColor(Color.BLACK);
+        overallPnLTextView.setPadding(20, 10, 20, 10); // Adjust padding as needed
+        overallPnLTextView.setTextSize(20);
+
+        layout.addView(overallPnLTextView);
+        View divider = new View(this);
+        divider.setBackgroundColor(Color.BLACK);
+        divider.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 5)); // Adjust height as needed
+        layout.addView(divider);
 
         for (Map.Entry<String, List<Order>> entry : orderMap.entrySet()) {
             String tradingSymbol = entry.getKey();
@@ -107,10 +119,18 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
 
             TextView tradingSymbolTextView = new TextView(this);
             tradingSymbolTextView.setText(tradingSymbol);
+            tradingSymbolTextView.setTextColor(Color.BLACK);
             symbolLayout.addView(tradingSymbolTextView);
 
+            TextView quantityTextView = new TextView(this);
+            quantityTextView.setText("Holding Quantity: " + position); // Display the quantity
+            symbolLayout.addView(quantityTextView);
 
-            tradingSymbolTextView.setOnClickListener(new View.OnClickListener() {
+
+            TextView positionTextView = new TextView(this);
+            positionTextView.setText(position != 0 ? "Position : Open" : "Position : Closed");
+            symbolLayout.addView(positionTextView);
+            symbolLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     // Retrieve the list of executed orders for the selected stock
@@ -120,25 +140,27 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
                 }
             });
 
-            TextView quantityTextView = new TextView(this);
-            quantityTextView.setText("Holding Quantity: " + position); // Display the quantity
-            symbolLayout.addView(quantityTextView);
-
-            TextView positionTextView = new TextView(this);
-            positionTextView.setText(position != 0 ? "Position : Open" : "Position : Closed");
-            symbolLayout.addView(positionTextView);
-
             // Add a TextView for PnL and store it in the map
-            TextView pnlTextView = new TextView(this);
+            pnlTextView = new TextView(this);
             if (position == 0) {
                 double closedPnL = calculateProfitLoss(symbolOrders, 0); // Assuming closed positions use the last known price
                 pnlTextView.setText(String.format(Locale.getDefault(), " PnL: ₹%.2f", closedPnL));
+                if (closedPnL < 0) {
+                    pnlTextView.setTextColor(Color.parseColor("#FF0000")); // Red color
+                } else {
+                    pnlTextView.setTextColor(Color.parseColor("#008000")); // Green color
+                }
                 overallPnlCache.put(tradingSymbol,closedPnL);
             }
             if (RabbitMQConnection.getPricesCache().containsKey(dbHelper.getInstrumentTokenByTradingSymbol(tradingSymbol))){
                 double currentPrice = RabbitMQConnection.getPricesCache().get(dbHelper.getInstrumentTokenByTradingSymbol(tradingSymbol));
                 double openPnL = calculateProfitLoss(symbolOrders, currentPrice); // Calculate PnL using current price
                 pnlTextView.setText(String.format(Locale.getDefault(), " PnL: ₹%.2f", openPnL));
+                if (openPnL < 0) {
+                    pnlTextView.setTextColor(Color.parseColor("#FF0000")); // Red color
+                } else {
+                    pnlTextView.setTextColor(Color.parseColor("#008000")); // Green color
+                }
                 overallPnlCache.put(tradingSymbol,openPnL);
 
             }else{
@@ -152,7 +174,7 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
             layout.addView(symbolLayout);
 
             // Add a horizontal line
-            View divider = new View(this);
+            divider = new View(this);
             divider.setBackgroundColor(Color.GRAY);
             divider.setLayoutParams(new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, 2)); // Adjust height as needed
@@ -163,20 +185,9 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
             overallPnL += pnl;
         }
         // Add a rectangular box to display overall PnL
-        overallPnLTextView = new TextView(this);
+
         overallPnLTextView.setText(String.format(Locale.getDefault(), "Overall PnL: ₹%.2f", overallPnL));
-        overallPnLTextView.setBackgroundColor(Color.WHITE);
-        overallPnLTextView.setTextColor(Color.BLACK);
-        overallPnLTextView.setPadding(20, 10, 20, 10); // Adjust padding as needed
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.setMargins(0, 0, 10, 100); // Adjust margins as needed
-        overallPnLTextView.setLayoutParams(params);
-        params.gravity = Gravity.BOTTOM | Gravity.END; // Set gravity to bottom right
-        overallPnLTextView.setLayoutParams(params);
-        layout.addView(overallPnLTextView);
+
 
 
     }
@@ -236,11 +247,20 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
 
         if (orderMap.containsKey(tradingSymbol)) {
             List<Order> orders = orderMap.get(tradingSymbol);
+
             double profitLoss = calculateProfitLoss(orders, currentPrice);
             String newText = String.format(Locale.getDefault(), "PnL: ₹%.2f", profitLoss);
+
             overallPnlCache.put(tradingSymbol,profitLoss);
             if (pnlTextViewMap.containsKey(tradingSymbol)) {
+
                 pnlTextViewMap.get(tradingSymbol).setText(newText);
+                if (profitLoss < 0) {
+                    pnlTextView.setTextColor(Color.parseColor("#FF0000")); // Red color
+                } else {
+                    pnlTextView.setTextColor(Color.parseColor("#008000")); // Green color
+                }
+
             }
             double overallPnL = 0;
             for (double pnl : overallPnlCache.values()) {
@@ -254,6 +274,12 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
              */
 
             overallPnLTextView.setText(String.format(Locale.getDefault(), "Overall PnL: ₹%.2f", overallPnL));
+
+            if (overallPnL < 0) {
+                overallPnLTextView.setTextColor(Color.parseColor("#FF0000"));
+            } else {
+                overallPnLTextView.setTextColor(Color.parseColor("#008000"));
+            }
 
         }
     }

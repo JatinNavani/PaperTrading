@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.rabbitmq.client.Delivery;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class UpdateTask extends AsyncTask<Delivery, Void, Void> {
 
@@ -24,13 +25,15 @@ public class UpdateTask extends AsyncTask<Delivery, Void, Void> {
             // Update the prices cache
 
             RabbitMQConnection.updatePricesCache(payload.getInstrumentToken(), payload.getPrice());
-            System.out.println("RabbitMQConnection"+ "Cache price update for " + payload.getInstrumentToken() + ": " + payload.getPrice());
+            System.out.println("RabbitMQConnection" + "Cache price update for " + payload.getInstrumentToken() + ": " + payload.getPrice());
 
+            List<MessageListener> listeners = RabbitMQConnection.getRegisterEventListener();
+            synchronized (listeners) {
+                for (MessageListener listener : RabbitMQConnection.getRegisterEventListener()) {
+                    listener.onPriceUpdateReceived(payload.getInstrumentToken(), payload.getPrice());
+                }
 
-            for (MessageListener listener : RabbitMQConnection.getRegisterEventListener()) {
-                listener.onPriceUpdateReceived(payload.getInstrumentToken(), payload.getPrice());
             }
-
         }
 
 

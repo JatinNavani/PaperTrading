@@ -172,7 +172,7 @@ public class BuySellActivity extends MainActivity {
         AsyncTask.execute(() -> {
             try {
 
-                URL url = new URL("http://192.168.1.6:8282/getQuote"+"?instrumentToken="+instrument_token);
+                URL url = new URL("http://papertrade.onthewifi.com:8282/getQuote"+"?instrumentToken="+instrument_token);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 try {
                     InputStream in = urlConnection.getInputStream();
