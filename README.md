@@ -13,7 +13,7 @@ Welcome to the Paper Trading Project! This project simulates a trading environme
 
 ## Architecture Diagram
 
-![Architecture Diagram](images/architecture_diagram.png)
+![Architecture Diagram](architecture_diagram.png)
 ## Prerequisites
 
 - Android Studio 4.2 or higher
