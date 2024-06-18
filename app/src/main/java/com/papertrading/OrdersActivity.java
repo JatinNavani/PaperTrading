@@ -64,16 +64,22 @@ public class OrdersActivity extends MainActivity {
     public void displayOrders(LinearLayout layout) {
         layout.removeAllViews(); // Clear the layout before adding new views
         List<Order> orders = dbHelper.getAllOrders();
+        LinearLayout emptyOrdersLayout = findViewById(R.id.empty_orders_layout);
 
         // Check if there are stocks to display
         if (orders.isEmpty()) {
             // Display a message indicating no stocks found
+            emptyOrdersLayout.setVisibility(View.VISIBLE);
+            /*
             TextView noOrdersTextView = new TextView(this);
             noOrdersTextView.setText("No orders found");
             noOrdersTextView.setTextSize(16);
             noOrdersTextView.setPadding(16, 8, 16, 8);
             layout.addView(noOrdersTextView);
+
+             */
         } else {
+            emptyOrdersLayout.setVisibility(View.GONE);
             // Add views for each stock and divider
             for (Order order : orders) {
                 TextView textView = new TextView(this);

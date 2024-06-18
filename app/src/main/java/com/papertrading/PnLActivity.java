@@ -217,8 +217,11 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
 
     private double calculateProfitLoss(List<Order> orders, double currentPrice) {
         double realizedProfit = 0;
+        double unrealizedProfit = 0;
+
         int totalBoughtQuantity = 0;
         double totalBuyValue = 0;
+
         int totalSoldQuantity = 0;
         double totalSellValue = 0;
 
@@ -232,16 +235,30 @@ public class PnLActivity extends OrdersActivity implements MessageListener {
             }
         }
 
+        // Handling realized profit
         int closedQuantity = Math.min(totalBoughtQuantity, totalSoldQuantity);
-        double averageBuyPrice = totalBoughtQuantity > 0 ? totalBuyValue / totalBoughtQuantity : 0;
-        double averageSellPrice = totalSoldQuantity > 0 ? totalSellValue / totalSoldQuantity : 0;
-        realizedProfit = closedQuantity * (averageSellPrice - averageBuyPrice);
+        if (closedQuantity > 0) {
+            double averageBuyPrice = totalBoughtQuantity > 0 ? totalBuyValue / totalBoughtQuantity : 0;
+            double averageSellPrice = totalSoldQuantity > 0 ? totalSellValue / totalSoldQuantity : 0;
+            realizedProfit = closedQuantity * (averageSellPrice - averageBuyPrice);
+        }
 
+        // Handling unrealized profit for open positions
         int openQuantity = totalBoughtQuantity - totalSoldQuantity;
-        double unrealizedProfit = openQuantity > 0 ? openQuantity * (currentPrice - averageBuyPrice) : 0;
+        if (openQuantity > 0) {
+            // Long positions (buy more than sell)
+            double averageBuyPrice = totalBoughtQuantity > 0 ? totalBuyValue / totalBoughtQuantity : 0;
+            unrealizedProfit = openQuantity * (currentPrice - averageBuyPrice);
+        } else if (openQuantity < 0) {
+            // Short positions (sell more than buy)
+            openQuantity = -openQuantity; // Make openQuantity positive for calculation
+            double averageSellPrice = totalSoldQuantity > 0 ? totalSellValue / totalSoldQuantity : 0;
+            unrealizedProfit = openQuantity * (averageSellPrice - currentPrice);
+        }
 
         return realizedProfit + unrealizedProfit;
     }
+
 
     protected void updatePnL(String tradingSymbol, double currentPrice) {
 

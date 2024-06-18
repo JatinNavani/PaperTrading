@@ -162,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements MessageListener{
 
         // Get reference to the search bar
         searchBar = findViewById(R.id.search_bar);
+
         searchBar.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
@@ -183,18 +184,19 @@ public class MainActivity extends AppCompatActivity implements MessageListener{
         //allStocks = dbHelper.getAllStocks();
         //filteredStocks = new ArrayList<>(allStocks);
 
-        // Display the initial message
         TextView noStocksTextView = new TextView(this);
         noStocksTextView.setText("No stocks selected");
         noStocksTextView.setTextSize(16);
         noStocksTextView.setPadding(16, 8, 16, 8);
         stockLayout.addView(noStocksTextView);
 
+
     }
     private void filterStocks(String query) {
         Log.d("FilterStocks", "Query: " + query); // Log the search query
         // Fetch filtered stocks from the database
         filteredStocks = dbHelper.searchStocks(query);
+
 
         // Log the filtered stocks
         for (Stock stock : filteredStocks) {
@@ -206,16 +208,33 @@ public class MainActivity extends AppCompatActivity implements MessageListener{
     }
     private void updateUI(LinearLayout layout, List<Stock> stocks) {
         layout.removeAllViews(); // Clear the layout before adding new views
+        LinearLayout emptyWatchlistLayout = findViewById(R.id.empty_watchlist_layout);
 
         // Check if there are stocks to display
         if (stocks.isEmpty()) {
+
+            emptyWatchlistLayout.setVisibility(View.VISIBLE);
+            /*
+
+            TextView noStocksTextView = new TextView(this);
+            noStocksTextView.setText("No stocks found");
+            noStocksTextView.setTextSize(16);
+            noStocksTextView.setPadding(16, 8, 16, 8);
+            layout.addView(noStocksTextView);
+
+             */
+            /*
             // Display a message indicating no stocks found
             TextView noStocksTextView = new TextView(this);
             noStocksTextView.setText("No stocks found");
             noStocksTextView.setTextSize(16);
             noStocksTextView.setPadding(16, 8, 16, 8);
             layout.addView(noStocksTextView);
+
+             */
         } else {
+            emptyWatchlistLayout.setVisibility(View.GONE);
+
             // Add views for each stock and divider
             for (Stock stock : stocks) {
                 TextView textView = new TextView(this);
@@ -256,12 +275,20 @@ public class MainActivity extends AppCompatActivity implements MessageListener{
 
         // Update the UI to display the watchlisted stocks
         updateWatchlistUI(watchlistStocks);
+
+        TextView itemCountTextView = findViewById(R.id.item_count);
+        itemCountTextView.setText(watchlistStocks.size() + "/20");
     }
 
     private void updateWatchlistUI(List<Stock> watchlistStocks) {
         stockLayout.removeAllViews(); // Clear existing views
 
+        LinearLayout emptyWatchlistLayout = findViewById(R.id.empty_watchlist_layout);
+
         if (!watchlistStocks.isEmpty()) {
+
+            emptyWatchlistLayout.setVisibility(View.GONE);
+
             // Add views for each watchlisted stock
             for (Stock stock : watchlistStocks) {
                 TextView textView = new TextView(this);
@@ -302,11 +329,18 @@ public class MainActivity extends AppCompatActivity implements MessageListener{
                 stockLayout.addView(divider);
             }
         } else {
+
+            emptyWatchlistLayout.setVisibility(View.VISIBLE);
+            /*
             // If watchlist is empty, display a message
             TextView noWatchlistTextView = new TextView(this);
             noWatchlistTextView.setText("No stocks in watchlist");
             // Customize text view properties as needed
             stockLayout.addView(noWatchlistTextView);
+
+             */
+
+
         }
     }
 

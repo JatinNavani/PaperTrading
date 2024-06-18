@@ -60,12 +60,20 @@ public class BuySellActivity extends MainActivity {
             public void onClick(View view) {
                 // Get quantity input
                 String quantity = quantityEditText.getText().toString();
+                if (quantity.isEmpty() || Integer.parseInt(quantity) <= 0) {
+                    Toast.makeText(BuySellActivity.this, "Please enter a valid quantity", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 // Store data in orders table (replace this with your database logic)
                 String orderId = UUID.randomUUID().toString();
-                long instrument_token =dbHelper.getInstrumentTokenByTradingSymbol(tradingSymbol);
-                storeOrder(tradingSymbol, "buy", quantity,0.0,instrument_token,orderId);
+                long instrument_token = dbHelper.getInstrumentTokenByTradingSymbol(tradingSymbol);
+                storeOrder(tradingSymbol, "buy", quantity, 0.0, instrument_token, orderId);
                 Toast.makeText(BuySellActivity.this, "Buy Order Placed: " + tradingSymbol + ", Quantity: " + quantity, Toast.LENGTH_SHORT).show();
-                callApiForOrder(instrument_token,"buy",orderId);
+                callApiForOrder(instrument_token, "buy", orderId);
+
+                // Redirect to new activity
+                Intent intent = new Intent(BuySellActivity.this, OrdersActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -74,12 +82,19 @@ public class BuySellActivity extends MainActivity {
             public void onClick(View view) {
                 // Get quantity input
                 String quantity = quantityEditText.getText().toString();
+                if (quantity.isEmpty() || Integer.parseInt(quantity) <= 0) {
+                    Toast.makeText(BuySellActivity.this, "Please enter a valid quantity", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 // Store data in orders table (replace this with your database logic)
                 String orderId = UUID.randomUUID().toString();
                 long instrument_token =dbHelper.getInstrumentTokenByTradingSymbol(tradingSymbol);
                 storeOrder(tradingSymbol, "sell", quantity,0.0,instrument_token,orderId);
                 Toast.makeText(BuySellActivity.this, "Sell Order Placed: " + tradingSymbol + ", Quantity: " + quantity, Toast.LENGTH_SHORT).show();
                 callApiForOrder(instrument_token,"sell",orderId);
+
+                Intent intent = new Intent(BuySellActivity.this, OrdersActivity.class);
+                startActivity(intent);
 
             }
         });
