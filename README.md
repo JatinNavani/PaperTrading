@@ -10,6 +10,10 @@ Welcome to the Paper Trading Project! This project simulates a trading environme
 - **Backend (Spring Boot)**: [Link to Spring Boot Repository](https://github.com/JatinNavani/PaperTrade_SpringBoot)
 - **Frontend (Android Studio)**: [Link to Android Studio Repository](https://github.com/JatinNavani/PaperTrading)
 
+
+## Architecture Diagram
+
+![Architecture Diagram](images/architecture_diagram.png)
 ## Prerequisites
 
 - Android Studio 4.2 or higher
